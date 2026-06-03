@@ -1,32 +1,30 @@
+import 'package:baddal_application/onboarding_screen.dart';
 import 'package:flutter/material.dart';
-import 'screens/login_screen.dart'; // استدعاء شاشتنا المخصصة
+import "package:shared_preferences/shared_preferences.dart";
+import 'package:baddal_application/screens/login_screen.dart';
 
-void main() {
-  runApp(const BaddalApp());
+void main() async {
+  // للتأكد من تهيئة كل الـ Widgets قبل قراءة الذاكرة
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // فحص هل المستخدم فتح التطبيق قبل كده؟
+  final prefs = await SharedPreferences.getInstance();
+  final bool seenOnboarding = prefs.getBool('seen_onboarding') ?? false;
+
+  runApp(MyApp(seenOnboarding: seenOnboarding));
 }
 
-class BaddalApp extends StatelessWidget {
-  const BaddalApp({super.key});
+class MyApp extends StatelessWidget {
+  final bool seenOnboarding;
+  const MyApp({super.key, required this.seenOnboarding});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'بدال',
       debugShowCheckedModeBanner: false,
-      // الثيم الفاتح
-      theme: ThemeData(
-        brightness: Brightness.light,
-        primaryColor: const Color(0xFF22C55E),
-        scaffoldBackgroundColor: const Color(0xFFF8FAFC),
-      ),
-      // الثيم الداكن
-      darkTheme: ThemeData(
-        brightness: Brightness.dark,
-        primaryColor: const Color(0xFF22C55E),
-        scaffoldBackgroundColor: const Color(0xFF0F172A),
-      ),
-      themeMode: ThemeMode.system, // يتغير مع وضع الموبايل تلقائياً
-      home: const LoginScreen(), // الشاشة التي ستفتح أول ما التطبيق يشتغل
+      title: 'Baddal',
+      // الشرط السحري: لو شافها قبل كده يفتح اللوج إن، لو أول مرة يفتح الـ Onboarding
+      home: seenOnboarding ? const LoginScreen() : OnboardingScreen(),
     );
   }
 }

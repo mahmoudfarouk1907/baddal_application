@@ -39,7 +39,7 @@ class ProfileScreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               const Text(
-                'أحمد محمد',
+                'محمود فاروق',
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 4),
