@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
 import 'doctor_screen.dart';
-import 'profile_screen.dart';
+import 'profile_screen.dart'; // تأكد أن الكلاس داخل هذا الملف اسمه ProfileScreen بالظبط
 
 class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
@@ -13,30 +13,33 @@ class MainLayout extends StatefulWidget {
 class _MainLayoutState extends State<MainLayout> {
   int _selectedIndex = 0;
 
+  // الإصلاح هنا: إضافة const لأن ProfileScreen كلاس ثابت
   final List<Widget> _screens = [
     const HomeScreen(),
     const DoctorScreen(),
-    const ProfileScreen(),
+    const ProfileScreen(), 
   ];
 
   @override
   Widget build(BuildContext context) {
+    const navyBlue = Color(0xFF0F172A);
+    const primaryGreen = Color(0xFF22C55E);
+
     return Scaffold(
-      extendBody: true, // عشان الشاشات تفرش ورا الناف بار بنعومة
+      extendBody: true, 
       body: _screens[_selectedIndex],
       
-      // الناف بار الـ Sleek والنحيف مقرب لأطراف الشاشة
       bottomNavigationBar: Padding(
-        padding: const EdgeInsets.only(bottom: 20.0, left: 16.0, right: 16.0), // وسعنا الجناب عشان يفرش عريض
+        padding: const EdgeInsets.only(bottom: 20.0, left: 16.0, right: 16.0),
         child: Container(
-          height: 56, // خليناه ارفع وشكله رقيق جداً
+          height: 65, // زيادة الطول لضمان عدم حدوث Overflow مع الخطوط السميكة
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(20), // حواف دائرية متناسقة مع العرض
+            borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.04), // ظل خفيف ونظيف جداً
-                blurRadius: 12,
+                color: Colors.black.withOpacity(0.08), 
+                blurRadius: 15,
                 offset: const Offset(0, 5),
               ),
             ],
@@ -44,9 +47,9 @@ class _MainLayoutState extends State<MainLayout> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildNavItem(0, Icons.directions_bike_outlined, Icons.directions_bike_rounded, 'التوصيل'),
-              _buildNavItem(1, Icons.local_hospital_outlined, Icons.local_hospital_rounded, 'الطبيب'),
-              _buildNavItem(2, Icons.person_outline_rounded, Icons.person_rounded, 'حسابي'),
+              _buildNavItem(0, Icons.directions_bike_outlined, Icons.directions_bike_rounded, 'التوصيل', primaryGreen, navyBlue),
+              _buildNavItem(1, Icons.local_hospital_outlined, Icons.local_hospital_rounded, 'الطبيب', primaryGreen, navyBlue),
+              _buildNavItem(2, Icons.person_outline_rounded, Icons.person_rounded, 'حسابي', primaryGreen, navyBlue),
             ],
           ),
         ),
@@ -54,39 +57,41 @@ class _MainLayoutState extends State<MainLayout> {
     );
   }
 
-  // الـ Widget المعدل: التركيز باللون فقط وبدون أي خلفيات داخلية
-  Widget _buildNavItem(int index, IconData normalIcon, IconData activeIcon, String label) {
+  Widget _buildNavItem(int index, IconData normalIcon, IconData activeIcon, String label, Color activeColor, Color inactiveColor) {
     bool isSelected = _selectedIndex == index;
     
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedIndex = index;
-        });
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.linear,
-        padding: const EdgeInsets.symmetric(vertical: 6),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              isSelected ? activeIcon : normalIcon, // بيتحول لأيقونة مليانة لما تختارها
-              color: isSelected ? Colors.green.shade700 : Colors.grey.shade400, // اللون الأخضر للأيقونة النشطة بس
-              size: 24,
-            ),
-            const SizedBox(height: 3),
-            Text(
-              label,
-              style: TextStyle(
-                color: isSelected ? Colors.green.shade700 : Colors.grey.shade400,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                fontSize: 11,
+    return Expanded(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeInOut,
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                isSelected ? activeIcon : normalIcon,
+                color: isSelected ? activeColor : inactiveColor.withOpacity(0.5),
+                size: 28, // تكبير بسيط لسهولة الرؤية
               ),
-            ),
-          ],
+              const SizedBox(height: 2),
+              Text(
+                label,
+                style: TextStyle(
+                  color: isSelected ? activeColor : inactiveColor.withOpacity(0.7),
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w700, // زيادة سمك الخط
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
