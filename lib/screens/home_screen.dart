@@ -1,232 +1,217 @@
 import 'package:flutter/material.dart';
-import 'doctor_screen.dart';
-import 'delivery_screen.dart';
-import 'profile_screen.dart';
+// الأبمورتات القديمة والجديدة متظبطة
+import 'notifications_screen.dart';
+import 'captain_ride_screen.dart';
+import 'delivery_package_screen.dart';
+import 'supermarket_screen.dart';
+import 'pharmacy_screen.dart';
+import 'multi_order_screen.dart'; // إمبورت شاشة المشوار الحر الجديدة
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // التحقق من وضع النظام (داكن أو فاتح) لتغيير الخلفيات تلقائياً
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
-    // ألوان الهوية المعتمدة لـ "بدال"
-    const primaryGreen = Color(0xFF22C55E); // الأخضر العشبي
-    const navyBlue = Color(0xFF0F172A);    // الكحلي الداكن
-
     return Scaffold(
-      backgroundColor: isDarkMode ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.notifications_none, color: isDarkMode ? Colors.white : navyBlue),
-          onPressed: () {},
-        ),
-        actions: [
-          Row(
-            children: [
-              const Text(
-                'بدال',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: primaryGreen,
-                ),
-              ),
-              const SizedBox(width: 12),
-              // التعديل: جعل زر البروفايل يفتح شاشة الـ ProfileScreen عند الضغط عليه
-              InkWell(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const ProfileScreen()),
-                  );
-                },
-                borderRadius: BorderRadius.circular(18),
-                child: CircleAvatar(
-                  radius: 18,
-                  backgroundColor: primaryGreen.withOpacity(0.2),
-                  child: const Icon(Icons.person, color: primaryGreen, size: 20),
-                ),
-              ),
-              const SizedBox(width: 20),
-            ],
-          ),
-        ],
-      ),
-      body: Directionality(
-        textDirection: TextDirection.rtl, // التطبيق باللغة العربية
+      backgroundColor: Colors.grey.shade50,
+      body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // قسم الترحيب
-              const Text(
-                'أهلاً بك يا محمود 👋',
-                style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'تطبيق بدال لخدمات التوصيل والحجز داخل أجا',
-                style: TextStyle(
-                  fontSize: 15,
-                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 1. الجزء العلوي (Header)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text("مرحباً بك في", style: TextStyle(fontSize: 16, color: Colors.grey)),
+                        Text(
+                          "بدّال لخدمات التوصيل",
+                          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.green.shade700),
+                        ),
+                      ],
+                    ),
+                    CircleAvatar(
+                      backgroundColor: Colors.green.shade100,
+                      child: IconButton(
+                        icon: const Icon(Icons.notifications_active_outlined, color: Colors.green),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 30),
+                const SizedBox(height: 24),
 
-              // كارت طلب خدمة توصيل (الأخضر العشبي)
-              _buildServiceCard(
-                title: 'طلب خدمة توصيل',
-                subtitle: 'مندوب خاص لتوصيل طلباتك داخل أجا بـ 25 جنيه',
-                icon: Icons.local_shipping_rounded,
-                backgroundColor: primaryGreen,
-                textColor: Colors.white,
-                iconColor: Colors.white,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const DeliveryScreen()),
-                  );
-                },
-              ),
-              const SizedBox(height: 20),
+                // 2. كارت الشعار الإعلاني (Banner)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.green.shade600, Colors.green.shade400],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "مش فاضي؟ بدّال بدالك",
+                        style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        "اطلب كابتن يخلص لك كل مشاويرك ويوصل طلباتك في أسرع وقت وأمان تام.",
+                        style: TextStyle(color: Colors.white70, fontSize: 14),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
 
-              // كارت حجز موعد طبيب
-              _buildServiceCard(
-                title: 'حجز موعد طبيب',
-                subtitle: 'احجز ميعادك بسهولة (الأسعار من 50 لـ 100 جنيه)',
-                icon: Icons.local_hospital_rounded,
-                backgroundColor: isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-                textColor: isDarkMode ? Colors.white : navyBlue,
-                iconColor: primaryGreen,
-                hasBorder: !isDarkMode,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const DoctorScreen()),
-                  );
-                },
-              ),
-              const SizedBox(height: 35),
+                // 3. عنوان قسم الخدمات
+                const Text(
+                  "اختر الخدمة التي تحتاجها:",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
+                ),
+                const SizedBox(height: 16),
 
-              // قسم النشاط الأخير
-              const Text(
-                'النشاط الأخير',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 15),
-
-              // عملية تجريبية سابقة بسعر أجا الثابت
-              _buildActivityItem(
-                title: 'طلب توصيل من السوبرماركت',
-                status: 'تم التوصيل بنجاح',
-                price: '25 ج.م',
-                icon: Icons.check_circle_rounded,
-                iconColor: primaryGreen,
-                isDarkMode: isDarkMode,
-              ),
-            ],
+                // 4. شبكة الخدمات (Services Grid) المتعدلة
+                GridView.count(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  childAspectRatio: 1.1,
+                  children: [
+                    _buildServiceCard(
+                      context,
+                      title: "طلب كابتن مشاوير",
+                      subtitle: "يقضيلك مشوارك الخاص",
+                      icon: Icons.directions_bike,
+                      color: Colors.orange,
+                      onTap: () {
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => const CaptainRideScreen()));
+                      },
+                    ),
+                    // كارت الخدمة الجديدة اللى ضيفناها
+                    _buildServiceCard(
+                      context,
+                      title: "مشوار حر (متعدد)",
+                      subtitle: "طلبات من كذا مكان في رحلة",
+                      icon: Icons.add_location_alt_rounded,
+                      color: Colors.indigo, // لون كحلي مميز للـ VIP متعدد النقاط
+                      onTap: () {
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => const MultiOrderScreen()));
+                      },
+                    ),
+                    _buildServiceCard(
+                      context,
+                      title: "توصيل طرد أو أمانة",
+                      subtitle: "إرسال واستلام أي حاجة",
+                      icon: Icons.local_shipping,
+                      color: Colors.blue,
+                      onTap: () {
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => const DeliveryPackageScreen()));
+                      },
+                    ),
+                    _buildServiceCard(
+                      context,
+                      title: "طلبات سوبرماركت",
+                      subtitle: "نجيبلك طلبات البيت",
+                      icon: Icons.shopping_basket,
+                      color: Colors.purple,
+                      onTap: () {
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => const SupermarketScreen()));
+                      },
+                    ),
+                    _buildServiceCard(
+                      context,
+                      title: "طلبات الصيدلية",
+                      subtitle: "علاجاتك لحد باب بيتك",
+                      icon: Icons.local_pharmacy,
+                      color: Colors.red,
+                      onTap: () {
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => const PharmacyScreen()));
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  // ويدجت لبناء الكروت الكبيرة
-  Widget _buildServiceCard({
+  Widget _buildServiceCard(
+    BuildContext context, {
     required String title,
     required String subtitle,
     required IconData icon,
-    required Color backgroundColor,
-    required Color textColor,
-    required Color iconColor,
-    bool hasBorder = false,
+    required Color color,
     required VoidCallback onTap,
   }) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: backgroundColor,
+          color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          border: hasBorder ? Border.all(color: Colors.grey[200]!) : null,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            )
-          ],
-        ),
-        child: Row(
-          children: [
-            Icon(icon, size: 45, color: iconColor),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: TextStyle(fontSize: 13, color: textColor.withOpacity(0.8)),
-                  ),
-                ],
-              ),
+              color: Colors.grey.withOpacity(0.1),
+              spreadRadius: 1,
+              blurRadius: 6,
+              offset: const Offset(0, 3),
             ),
-            Icon(Icons.arrow_forward_ios_rounded, size: 16, color: textColor.withOpacity(0.6)),
           ],
         ),
-      ),
-    );
-  }
-
-  // ويدجت لبناء عناصر قائمة النشاط الأخير
-  Widget _buildActivityItem({
-    required String title,
-    required String status,
-    required String price,
-    required IconData icon,
-    required Color iconColor,
-    required bool isDarkMode,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: isDarkMode ? null : Border.all(color: Colors.grey[100]!),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: iconColor, size: 28),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 30, color: color),
+            ),
+            Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                Text(
+                  title,
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.black87),
+                ),
                 const SizedBox(height: 4),
-                Text(status, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                Text(
+                  subtitle,
+                  style: const TextStyle(fontSize: 11, color: Colors.grey),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ],
             ),
-          ),
-          Text(
-            price,
-            style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF22C55E)),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

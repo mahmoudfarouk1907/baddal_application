@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'screens/login_screen.dart'; // استدعاء شاشتنا المخصصة
-
+import 'screens/onboarding_screen.dart'; // استدعاء شاشة الإعدادات الأولية
 void main() {
   runApp(const BaddalApp());
 }
@@ -26,7 +26,6 @@ class BaddalApp extends StatelessWidget {
         scaffoldBackgroundColor: const Color(0xFF0F172A),
       ),
       themeMode: ThemeMode.system, // يتغير مع وضع الموبايل تلقائياً
-      home: const LoginScreen(), // الشاشة التي ستفتح أول ما التطبيق يشتغل
-    );
+home: const OnboardingScreen(),    );
   }
 }
