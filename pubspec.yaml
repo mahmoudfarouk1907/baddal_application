@@ -16,6 +16,9 @@ dependencies:
   # المكتبة السحرية عشان الـ Splash Screens وميتقرروش تاني
   shared_preferences: ^2.2.3
   share_plus: ^12.0.2
+  
+  # ضفنا مكتبة التواصل والاتصال هنا 👇
+  url_launcher: ^6.3.0
 
 dev_dependencies:
   flutter_test:

@@ -3,6 +3,9 @@ import 'package:share_plus/share_plus.dart';
 import 'login_screen.dart';
 import 'edit_profile_screen.dart';
 import 'saved_addresses_screen.dart';
+// 1. استدعاء صفحة الأدمن الجديدة هنا
+import 'admin_panel_screen.dart'; 
+import 'main_layout.dart'; // استدعاء شاشة الـ ليرجع لها بالـ Navbar
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -10,7 +13,8 @@ class ProfileScreen extends StatelessWidget {
   static const Color primaryGreen = Color(0xFF22C55E);
   static const Color navyBlue = Color(0xFF0F172A);
 
-  static const String adminEmail = "admin@baddal.com"; 
+  // 2. جعلنا الإيميل الحالي هو نفسه إيميل الأدمن عشان الزرار يظهرلك فوراً وتجرب براحتك
+  static const String adminEmail = "ahmed@baddal.com"; 
   static const String currentUserEmail = "ahmed@baddal.com"; 
 
   @override
@@ -27,7 +31,17 @@ class ProfileScreen extends StatelessWidget {
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, color: navyBlue),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            // التعديل السحري: لو فيه شاشة وراه هيرجع، لو مفيش هيفجر الـ MainLayout بالـ Navbar
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            } else {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const MainLayout()),
+              );
+            }
+          },
         ),
       ),
       body: Directionality(
@@ -106,17 +120,36 @@ class ProfileScreen extends StatelessWidget {
                 ),
               ),
 
+              // 3. هنا بيحصل الفحص السحري: لو الحساب المفتوح هو حساب الأدمن، بيظهر له الخيار ده تلقائياً
               if (currentUserEmail == adminEmail) ...[
-                const SizedBox(height: 16),
-                TextButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(Icons.admin_panel_settings_rounded, color: Colors.blueGrey),
-                  label: const Text("الدخول كمسؤول النظام", style: TextStyle(color: Colors.blueGrey, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: TextButton.icon(
+                    style: TextButton.styleFrom(
+                      backgroundColor: navyBlue.withOpacity(0.05),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    onPressed: () {
+                      // الانتقال المباشر للوحة تحكم المسؤول
+                      Navigator.push(
+                        context, 
+                        MaterialPageRoute(builder: (context) => const AdminPanelScreen())
+                      );
+                    },
+                    icon: const Icon(Icons.admin_panel_settings_rounded, color: navyBlue),
+                    label: const Text(
+                      "الدخول كمسؤول النظام", 
+                      style: TextStyle(color: navyBlue, fontWeight: FontWeight.bold, fontSize: 15),
+                    ),
+                  ),
                 ),
               ],
               
-              const SizedBox(height: 40),
+              const SizedBox(height: 32),
 
+              // --- زر تسجيل الخروج ---
               SizedBox(
                 width: double.infinity,
                 height: 55,
