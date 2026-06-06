@@ -138,7 +138,7 @@ class _PaymentConfirmationScreenState extends State<PaymentConfirmationScreen> {
   Widget _buildTransferDetails({required String title, required String value, required IconData icon}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 5)]),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5)]),
       child: Row(
         children: [
           Icon(icon, color: Colors.green.shade700, size: 24),
@@ -147,7 +147,7 @@ class _PaymentConfirmationScreenState extends State<PaymentConfirmationScreen> {
             crossAxisAlignment: CrossAxisAlignment.start, 
             children: [
               // تعديل: تغميق لون العنوان الفرعي لزيادة حدة القراءة لضعاف النظر
-              Text(title, style: TextStyle(color: darkText.withOpacity(0.7), fontSize: 13, fontWeight: FontWeight.w500)), 
+              Text(title, style: TextStyle(color: darkText.withValues(alpha: 0.7), fontSize: 13, fontWeight: FontWeight.w500)), 
               const SizedBox(height: 4),
               Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: darkText)),
             ],

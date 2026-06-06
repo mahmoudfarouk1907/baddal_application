@@ -54,7 +54,7 @@ class _SignupScreenState extends State<SignupScreen> {
   Widget build(BuildContext context) {
     const primaryGreen = Color(0xFF22C55E);
     const navyBlue = Color(0xFF0F172A);
-    final textHighContrast = navyBlue.withOpacity(0.7);
+    final textHighContrast = navyBlue.withValues(alpha: 0.7);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -204,8 +204,8 @@ class _SignupScreenState extends State<SignupScreen> {
   InputDecoration _buildInputDecoration(IconData? prefixIcon, String hint, Color navy) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: TextStyle(color: navy.withOpacity(0.4), fontSize: 14, fontWeight: FontWeight.w400),
-      prefixIcon: prefixIcon != null ? Icon(prefixIcon, color: navy.withOpacity(0.6)) : null,
+      hintStyle: TextStyle(color: navy.withValues(alpha: 0.4), fontSize: 14, fontWeight: FontWeight.w400),
+      prefixIcon: prefixIcon != null ? Icon(prefixIcon, color: navy.withValues(alpha: 0.6)) : null,
       filled: true,
       fillColor: Colors.white,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),

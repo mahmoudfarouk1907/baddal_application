@@ -1,54 +1,67 @@
+// lib/main.dart
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/onboarding_screen.dart'; 
 import 'screens/login_screen.dart';
+import 'screens/main_layout.dart';
+import 'screens/captain_orders_screen.dart'; // هذا الملف يحتوي الآن على الـ Layout المجمع للكابتن
+
 
 void main() async {
-  // للتأكد من تهيئة كل الـ Widgets قبل قراءة الذاكرة
+  // للتأكد من أن كود الفلاتر جاهز قبل قراءة الـ SharedPreferences على الويب
   WidgetsFlutterBinding.ensureInitialized();
   
-  // فحص هل المستخدم فتح التطبيق قبل كده؟
   final prefs = await SharedPreferences.getInstance();
   final bool seenOnboarding = prefs.getBool('seen_onboarding') ?? false;
+  final String? userRole = prefs.getString('user_role'); // كابتن أو يوزر
 
-  runApp(MyApp(seenOnboarding: seenOnboarding));
+  runApp(MyApp(seenOnboarding: seenOnboarding, userRole: userRole));
 }
 
 class MyApp extends StatelessWidget {
   final bool seenOnboarding;
-  const MyApp({super.key, required this.seenOnboarding});
+  final String? userRole;
+  const MyApp({super.key, required this.seenOnboarding, this.userRole});
 
   @override
   Widget build(BuildContext context) {
     const Color customDarkBlue = Color(0xFF0F172A);
     const Color primaryGreen = Color(0xFF22C55E);
 
+    // الـ Logic المسؤول عن توجيه المستخدم من البداية تماماً 🚀
+    Widget getHomeScreen() {
+      // 1. لو لسه مستخدم جديد خالص وما شافش الـ Onboarding، يروح لشاشات التعريف
+      if (!seenOnboarding) return const OnboardingScreen();
+      
+      // 2. لو شاف الـ Onboarding ودخل كـ كابتن، يروح للـ Layout المجمع الجديد (الطلبات والمحفظة والبروفايل)
+      if (userRole == 'captain') return const CaptainMainLayout(); 
+      
+      // 3. لو دخل كـ مستخدم عادي (User)، يروح لشاشات اليوزر
+      if (userRole == 'user') return const MainLayout();
+      
+      // 4. لو مفيش أي داتا متسجلة خالص (null)، يروح لشاشة اللوج إن أو اختيار الحساب مباشرة
+      return const LoginScreen(); 
+    }
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Baddal',
-      
-      // --- الثيم الفاتح (Light Theme) الموحد عالي التباين ---
       theme: ThemeData(
         brightness: Brightness.light,
         primaryColor: primaryGreen,
         scaffoldBackgroundColor: const Color(0xFFF8FAFC),
-        
-        // تظبيط الخطوط (TextTheme)
         textTheme: const TextTheme(
           bodyLarge: TextStyle(color: customDarkBlue, fontWeight: FontWeight.w600, fontSize: 16),
           bodyMedium: TextStyle(color: customDarkBlue, fontWeight: FontWeight.w500, fontSize: 14),
           titleLarge: TextStyle(color: customDarkBlue, fontWeight: FontWeight.bold, fontSize: 22),
           titleMedium: TextStyle(color: customDarkBlue, fontWeight: FontWeight.bold, fontSize: 18),
         ),
-
-        // تظبيط حقول الإدخال (InputDecorationTheme) لتقرأ تلقائياً في كل الصفحات
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
           fillColor: Colors.white,
           labelStyle: const TextStyle(color: customDarkBlue, fontWeight: FontWeight.w600),
-          hintStyle: TextStyle(color: customDarkBlue.withOpacity(0.4), fontSize: 14, fontWeight: FontWeight.w400),
           contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-          errorStyle: const TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide(color: Colors.grey.shade400, width: 1.2),
@@ -57,44 +70,16 @@ class MyApp extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
             borderSide: const BorderSide(color: primaryGreen, width: 2),
           ),
-          errorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Colors.red, width: 1.2),
-          ),
-          focusedErrorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Colors.red, width: 2),
-          ),
         ),
-
-        // تظبيط الأزرار بشكل موحد (ElevatedButtonTheme)
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
             backgroundColor: primaryGreen,
-            elevation: 0,
             minimumSize: const Size(double.infinity, 55),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
           ),
         ),
       ),
-
-      // --- الثيم الداكن (Dark Theme) ---
-      darkTheme: ThemeData(
-        brightness: Brightness.dark,
-        primaryColor: primaryGreen,
-        scaffoldBackgroundColor: customDarkBlue,
-        textTheme: const TextTheme(
-          bodyLarge: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-          bodyMedium: TextStyle(color: Colors.white70, fontWeight: FontWeight.w500),
-          titleLarge: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 22),
-        ),
-      ),
-
-      themeMode: ThemeMode.system, 
-      
-      // الشرط السحري المظبوط بدون تكرار
-      home: seenOnboarding ? const LoginScreen() : const OnboardingScreen(),
+      home: getHomeScreen(),
     );
   }
 }

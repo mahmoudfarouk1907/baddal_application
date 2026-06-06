@@ -38,7 +38,7 @@ class _MainLayoutState extends State<MainLayout> {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.08), 
+                color: Colors.black.withValues(alpha: 0.08), 
                 blurRadius: 15,
                 offset: const Offset(0, 5),
               ),
@@ -78,14 +78,14 @@ class _MainLayoutState extends State<MainLayout> {
             children: [
               Icon(
                 isSelected ? activeIcon : normalIcon,
-                color: isSelected ? activeColor : inactiveColor.withOpacity(0.5),
+                color: isSelected ? activeColor : inactiveColor.withValues(alpha: 0.5),
                 size: 28, // تكبير بسيط لسهولة الرؤية
               ),
               const SizedBox(height: 2),
               Text(
                 label,
                 style: TextStyle(
-                  color: isSelected ? activeColor : inactiveColor.withOpacity(0.7),
+                  color: isSelected ? activeColor : inactiveColor.withValues(alpha: 0.7),
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.w700, // زيادة سمك الخط
                   fontSize: 12,
                 ),

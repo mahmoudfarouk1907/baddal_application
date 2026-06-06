@@ -57,7 +57,7 @@ class _OtpScreenState extends State<OtpScreen> {
                   Text(
                     'تم إرسال كود التفعيل المكون من 4 أرقام إلى:\n${widget.destination}',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 15, color: navyBlue.withOpacity(0.7), fontWeight: FontWeight.w600, height: 1.5),
+                    style: TextStyle(fontSize: 15, color: navyBlue.withValues(alpha: 0.7), fontWeight: FontWeight.w600, height: 1.5),
                   ),
                   const SizedBox(height: 40),
 
@@ -135,7 +135,7 @@ class _OtpScreenState extends State<OtpScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text('لم يصلك الرمز؟ ', style: TextStyle(color: navyBlue.withOpacity(0.7), fontWeight: FontWeight.w500)),
+                      Text('لم يصلك الرمز؟ ', style: TextStyle(color: navyBlue.withValues(alpha: 0.7), fontWeight: FontWeight.w500)),
                       TextButton(
                         onPressed: () {
                           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم إعادة إرسال الرمز بنجاح')));

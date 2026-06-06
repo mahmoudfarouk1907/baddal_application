@@ -89,7 +89,7 @@ class _PharmacyScreenState extends State<PharmacyScreen> {
                   },
                   decoration: InputDecoration(
                     hintText: "اكتب أسماء الأدوية أو الطلبات هنا بالتفصيل...",
-                    hintStyle: TextStyle(color: navyBlue.withOpacity(0.4), fontSize: 14, fontWeight: FontWeight.w500),
+                    hintStyle: TextStyle(color: navyBlue.withValues(alpha: 0.4), fontSize: 14, fontWeight: FontWeight.w500),
                     fillColor: Colors.white,
                     filled: true,
                     errorStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.red),
@@ -122,9 +122,9 @@ class _PharmacyScreenState extends State<PharmacyScreen> {
                       _hasPrescriptionImage = true;
                     });
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
+                      const SnackBar(
                         backgroundColor: primaryGreen,
-                        content: const Text("تم التقاط صورة الروشتة بنجاح", style: TextStyle(fontWeight: FontWeight.bold), textAlign: TextAlign.right),
+                        content: Text("تم التقاط صورة الروشتة بنجاح", style: TextStyle(fontWeight: FontWeight.bold), textAlign: TextAlign.right),
                       ),
                     );
                   },

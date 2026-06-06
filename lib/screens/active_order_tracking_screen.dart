@@ -16,7 +16,7 @@ class _ActiveOrderTrackingScreenState extends State<ActiveOrderTrackingScreen> {
   // بيانات الكابتن (للتجربة)
   final String captainPhone = "+201012345678"; // حط هنا رقم الكابتن الحقيقي من الداتا
 
-  int _currentStep = 1;
+  final int _currentStep = 1;
 
   // وظيفة الاتصال الهاتفي
   Future<void> _makePhoneCall(String phoneNumber) async {
@@ -62,7 +62,7 @@ class _ActiveOrderTrackingScreenState extends State<ActiveOrderTrackingScreen> {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
-                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)],
+                  boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10)],
                 ),
                 child: Column(
                   children: [
@@ -88,7 +88,7 @@ class _ActiveOrderTrackingScreenState extends State<ActiveOrderTrackingScreen> {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
-                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)],
+                  boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10)],
                 ),
                 child: Column(
                   children: [
@@ -96,7 +96,7 @@ class _ActiveOrderTrackingScreenState extends State<ActiveOrderTrackingScreen> {
                       children: [
                         CircleAvatar(
                           radius: 28,
-                          backgroundColor: primaryGreen.withOpacity(0.1),
+                          backgroundColor: primaryGreen.withValues(alpha: 0.1),
                           child: const Icon(Icons.person_rounded, color: primaryGreen, size: 32),
                         ),
                         const SizedBox(width: 12),
@@ -185,7 +185,7 @@ class _ActiveOrderTrackingScreenState extends State<ActiveOrderTrackingScreen> {
               decoration: BoxDecoration(
                 color: isCompleted ? primaryGreen : Colors.grey.shade200,
                 shape: BoxShape.circle,
-                border: isCompleted ? Border.all(color: primaryGreen.withOpacity(0.2), width: 4) : null,
+                border: isCompleted ? Border.all(color: primaryGreen.withValues(alpha: 0.2), width: 4) : null,
               ),
               child: isCompleted ? const Icon(Icons.check, color: Colors.white, size: 14) : null,
             ),
@@ -200,7 +200,7 @@ class _ActiveOrderTrackingScreenState extends State<ActiveOrderTrackingScreen> {
             children: [
               Text(title, style: TextStyle(fontWeight: FontWeight.w900, color: isCompleted ? navyBlue : Colors.grey, fontSize: 14)),
               const SizedBox(height: 4),
-              Text(subtitle, style: TextStyle(color: isCompleted ? navyBlue.withOpacity(0.5) : Colors.grey.withOpacity(0.6), fontSize: 12, fontWeight: FontWeight.bold)),
+              Text(subtitle, style: TextStyle(color: isCompleted ? navyBlue.withValues(alpha: 0.5) : Colors.grey.withValues(alpha: 0.6), fontSize: 12, fontWeight: FontWeight.bold)),
               const SizedBox(height: 12),
             ],
           ),

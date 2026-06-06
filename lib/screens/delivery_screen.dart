@@ -39,13 +39,13 @@ class DeliveryScreen extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: primaryGreen.withOpacity(0.1),
+                  color: primaryGreen.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: primaryGreen.withOpacity(0.3)),
+                  border: Border.all(color: primaryGreen.withValues(alpha: 0.3)),
                 ),
-                child: Row(
+                child: const Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: const [
+                  children: [
                     Text(
                       'تكلفة التوصيل (داخل أجا):',
                       style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),

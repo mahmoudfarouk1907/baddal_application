@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart'; 
+import 'package:shared_preferences/shared_preferences.dart'; // 1. استدعاء مكتبة الحفظ لمسح البيانات عند الخروج
 import 'login_screen.dart';
 import 'edit_profile_screen.dart';
 import 'saved_addresses_screen.dart';
-// 1. استدعاء صفحة الأدمن الجديدة هنا
 import 'admin_panel_screen.dart'; 
-import 'main_layout.dart'; // استدعاء شاشة الـ ليرجع لها بالـ Navbar
+import 'main_layout.dart'; 
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -13,7 +13,7 @@ class ProfileScreen extends StatelessWidget {
   static const Color primaryGreen = Color(0xFF22C55E);
   static const Color navyBlue = Color(0xFF0F172A);
 
-  // 2. جعلنا الإيميل الحالي هو نفسه إيميل الأدمن عشان الزرار يظهرلك فوراً وتجرب براحتك
+  // جعلنا الإيميل الحالي هو نفسه إيميل الأدمن عشان الزرار يظهرلك فوراً وتجرب براحتك
   static const String adminEmail = "ahmed@baddal.com"; 
   static const String currentUserEmail = "ahmed@baddal.com"; 
 
@@ -32,7 +32,6 @@ class ProfileScreen extends StatelessWidget {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, color: navyBlue),
           onPressed: () {
-            // التعديل السحري: لو فيه شاشة وراه هيرجع، لو مفيش هيفجر الـ MainLayout بالـ Navbar
             if (Navigator.canPop(context)) {
               Navigator.pop(context);
             } else {
@@ -55,7 +54,7 @@ class ProfileScreen extends StatelessWidget {
                 children: [
                   CircleAvatar(
                     radius: 54,
-                    backgroundColor: primaryGreen.withOpacity(0.1),
+                    backgroundColor: primaryGreen.withValues(alpha: 0.1),
                     child: const Icon(Icons.person, size: 60, color: primaryGreen),
                   ),
                   Positioned(
@@ -120,7 +119,7 @@ class ProfileScreen extends StatelessWidget {
                 ),
               ),
 
-              // 3. هنا بيحصل الفحص السحري: لو الحساب المفتوح هو حساب الأدمن، بيظهر له الخيار ده تلقائياً
+              // هنا بيحصل الفحص السحري: لو الحساب المفتوح هو حساب الأدمن، بيظهر له الخيار ده تلقائياً
               if (currentUserEmail == adminEmail) ...[
                 const SizedBox(height: 24),
                 SizedBox(
@@ -128,11 +127,10 @@ class ProfileScreen extends StatelessWidget {
                   height: 50,
                   child: TextButton.icon(
                     style: TextButton.styleFrom(
-                      backgroundColor: navyBlue.withOpacity(0.05),
+                      backgroundColor: navyBlue.withValues(alpha: 0.05),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
                     onPressed: () {
-                      // الانتقال المباشر للوحة تحكم المسؤول
                       Navigator.push(
                         context, 
                         MaterialPageRoute(builder: (context) => const AdminPanelScreen())
@@ -149,17 +147,24 @@ class ProfileScreen extends StatelessWidget {
               
               const SizedBox(height: 32),
 
-              // --- زر تسجيل الخروج ---
+              // --- زر تسجيل الخروج المحدث ---
               SizedBox(
                 width: double.infinity,
                 height: 55,
                 child: OutlinedButton.icon(
-                  onPressed: () {
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(builder: (context) => const LoginScreen()),
-                      (route) => false,
-                    );
+                  onPressed: () async {
+                    // 2. مسح نوع الحساب المحفوظ في الجهاز تماماً عند تسجيل الخروج
+                    final prefs = await SharedPreferences.getInstance();
+                    await prefs.remove('user_role'); 
+
+                    // الانتقال لصفحة اللوج إن وتصفير الـ Navigation Stack
+                    if (context.mounted) {
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(builder: (context) => const LoginScreen()),
+                        (route) => false,
+                      );
+                    }
                   },
                   icon: const Icon(Icons.logout_rounded, color: Colors.red),
                   label: const Text(
@@ -190,7 +195,7 @@ class ProfileScreen extends StatelessWidget {
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: primaryGreen.withOpacity(0.08),
+          color: primaryGreen.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Icon(icon, color: primaryGreen, size: 22),

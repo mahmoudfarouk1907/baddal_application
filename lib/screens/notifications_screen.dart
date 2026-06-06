@@ -98,7 +98,7 @@ class NotificationsScreen extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -109,7 +109,7 @@ class NotificationsScreen extends StatelessWidget {
         leading: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: Icon(icon, color: color, size: 28),
@@ -129,7 +129,7 @@ class NotificationsScreen extends StatelessWidget {
             Text(
               status,
               style: TextStyle(
-                color: isActive ? Colors.black : navyBlue.withOpacity(0.6),
+                color: isActive ? Colors.black : navyBlue.withValues(alpha: 0.6),
                 fontSize: 14,
                 fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
               ),

@@ -209,7 +209,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     return InputDecoration(
       prefixIcon: Icon(icon, color: primaryGreen, size: 22),
       hintText: hintText,
-      hintStyle: TextStyle(color: navyBlue.withOpacity(0.4), fontWeight: FontWeight.w500),
+      hintStyle: TextStyle(color: navyBlue.withValues(alpha: 0.4), fontWeight: FontWeight.w500),
       fillColor: Colors.white,
       filled: true,
       errorStyle: const TextStyle(fontWeight: FontWeight.bold, color: Colors.red, fontSize: 13),

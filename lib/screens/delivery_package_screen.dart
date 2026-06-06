@@ -122,7 +122,7 @@ class _DeliveryPackageScreenState extends State<DeliveryPackageScreen> {
                   validator: (value) => (value == null || value.trim().isEmpty) ? "يرجى وصف محتوى الطرد" : null,
                   decoration: InputDecoration(
                     hintText: "مثال: شنطة ملابس، أوراق مهمة، أمانة صيدلية...",
-                    hintStyle: TextStyle(color: navyBlue.withOpacity(0.4), fontSize: 14),
+                    hintStyle: TextStyle(color: navyBlue.withValues(alpha: 0.4), fontSize: 14),
                     fillColor: Colors.white,
                     filled: true,
                     errorStyle: const TextStyle(fontWeight: FontWeight.bold, color: Colors.red),

@@ -92,7 +92,7 @@ class _SupportComplaintsScreenState extends State<SupportComplaintsScreen> {
                 // نص ترحيبي توضيحي
                 Container(
                   padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(color: primaryGreen.withOpacity(0.05), borderRadius: BorderRadius.circular(12)),
+                  decoration: BoxDecoration(color: primaryGreen.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(12)),
                   child: const Row(
                     children: [
                       Icon(Icons.headset_mic_rounded, color: primaryGreen, size: 28),
@@ -112,9 +112,9 @@ class _SupportComplaintsScreenState extends State<SupportComplaintsScreen> {
                 const Text("نوع المشكلة أو الشكوى", style: TextStyle(fontWeight: FontWeight.w900, color: navyBlue, fontSize: 14)),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
-                  value: _selectedCategory,
+                  initialValue: _selectedCategory,
                   dropdownColor: Colors.white, // التعديل الجوهري: يخلي القائمة المنسدلة بيضاء ناصعة لما تفتح
-                  hint: Text("اختر تصنيف المشكلة...", style: TextStyle(color: navyBlue.withOpacity(0.35), fontWeight: FontWeight.bold, fontSize: 14)),
+                  hint: Text("اختر تصنيف المشكلة...", style: TextStyle(color: navyBlue.withValues(alpha: 0.35), fontWeight: FontWeight.bold, fontSize: 14)),
                   // تأكيد تلوين النص بالـ navyBlue بوضوح لكل عنصر داخل القائمة
                   items: _categories.map((cat) => DropdownMenuItem(
                     value: cat, 
@@ -144,7 +144,7 @@ class _SupportComplaintsScreenState extends State<SupportComplaintsScreen> {
                   },
                   decoration: InputDecoration(
                     hintText: "يرجى كتابة ما حدث معك بالتفصيل (رقم الرحلة، وقت الحدوث، إلخ...)",
-                    hintStyle: TextStyle(color: navyBlue.withOpacity(0.35), fontWeight: FontWeight.w500, fontSize: 13),
+                    hintStyle: TextStyle(color: navyBlue.withValues(alpha: 0.35), fontWeight: FontWeight.w500, fontSize: 13),
                     fillColor: Colors.white,
                     filled: true,
                     errorStyle: const TextStyle(fontWeight: FontWeight.bold, color: Colors.red),

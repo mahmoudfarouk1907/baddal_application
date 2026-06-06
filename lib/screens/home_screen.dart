@@ -71,10 +71,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                               onPressed: () => Scaffold.of(context).openDrawer(),
                             ),
                           ),
-                          Column(
+                          const Column(
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              const Text("مرحباً بك في", style: TextStyle(fontSize: 14, color: Colors.grey)),
+                              Text("مرحباً بك في", style: TextStyle(fontSize: 14, color: Colors.grey)),
                               Text(
                                 "بدّال لخدمات التوصيل",
                                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: primaryGreen),
@@ -113,7 +113,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                               "مش فاضي؟ بدّال بدالك",
                               style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
                             ),
-                            const SizedBox(height: 8),
+                            SizedBox(height: 8),
                             Text(
                               "اطلب كابتن يخلص لك كل مشاويرك ويوصل طلباتك في أسرع وقت وأمان تام.",
                               style: TextStyle(color: Colors.white70, fontSize: 14),
@@ -178,7 +178,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               height: 65 * _pulseAnimation.value,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: primaryGreen.withOpacity(0.4 * (1.8 - _pulseAnimation.value)),
+                color: primaryGreen.withValues(alpha: 0.4 * (1.8 - _pulseAnimation.value)),
               ),
             ),
             GestureDetector(
@@ -248,12 +248,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       borderRadius: BorderRadius.circular(16),
       child: Container(
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.1), spreadRadius: 1, blurRadius: 6, offset: const Offset(0, 3))]),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), boxShadow: [BoxShadow(color: Colors.grey.withValues(alpha: 0.1), spreadRadius: 1, blurRadius: 6, offset: const Offset(0, 3))]),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle), child: Icon(icon, size: 30, color: color)),
+            Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle), child: Icon(icon, size: 30, color: color)),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

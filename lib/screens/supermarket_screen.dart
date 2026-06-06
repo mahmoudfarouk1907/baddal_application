@@ -82,7 +82,7 @@ class _SupermarketScreenState extends State<SupermarketScreen> {
                       : null,
                   decoration: InputDecoration(
                     hintText: "اكتب هنا كل اللي محتاجه (مثلاً: 2 كيلو سكر، كرتونة بيض، منظفات...)",
-                    hintStyle: TextStyle(color: navyBlue.withOpacity(0.4), fontSize: 14, fontWeight: FontWeight.w500),
+                    hintStyle: TextStyle(color: navyBlue.withValues(alpha: 0.4), fontSize: 14, fontWeight: FontWeight.w500),
                     fillColor: Colors.white,
                     filled: true,
                     errorStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.red),
@@ -113,7 +113,7 @@ class _SupermarketScreenState extends State<SupermarketScreen> {
                   decoration: BoxDecoration(
                     color: Colors.grey.shade100, // خلفية رمادية هادية
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: primaryGreen.withOpacity(0.2), width: 1), // تحديد أخضر خفيف
+                    border: Border.all(color: primaryGreen.withValues(alpha: 0.2), width: 1), // تحديد أخضر خفيف
                   ),
                   child: Row(
                     children: [
@@ -125,7 +125,7 @@ class _SupermarketScreenState extends State<SupermarketScreen> {
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
-                            color: navyBlue.withOpacity(0.8),
+                            color: navyBlue.withValues(alpha: 0.8),
                             height: 1.4,
                           ),
                         ),

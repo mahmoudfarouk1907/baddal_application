@@ -268,7 +268,7 @@ class _DoctorScreenState extends State<DoctorScreen> {
       decoration: InputDecoration(
         labelText: label,
         labelStyle: TextStyle(
-          color: hasError ? Colors.red.shade700 : navyBlue.withOpacity(0.7), 
+          color: hasError ? Colors.red.shade700 : navyBlue.withValues(alpha: 0.7), 
           fontSize: 14,
           fontWeight: FontWeight.w500,
         ),
@@ -322,7 +322,7 @@ class _DoctorScreenState extends State<DoctorScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)],
       ),
       child: SafeArea(
         child: Column(
