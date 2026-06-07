@@ -112,7 +112,7 @@ class _SupportComplaintsScreenState extends State<SupportComplaintsScreen> {
                 const Text("نوع المشكلة أو الشكوى", style: TextStyle(fontWeight: FontWeight.w900, color: navyBlue, fontSize: 14)),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
-                  initialValue: _selectedCategory,
+                  value: _selectedCategory,
                   dropdownColor: Colors.white, // التعديل الجوهري: يخلي القائمة المنسدلة بيضاء ناصعة لما تفتح
                   hint: Text("اختر تصنيف المشكلة...", style: TextStyle(color: navyBlue.withValues(alpha: 0.35), fontWeight: FontWeight.bold, fontSize: 14)),
                   // تأكيد تلوين النص بالـ navyBlue بوضوح لكل عنصر داخل القائمة
