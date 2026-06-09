@@ -13,6 +13,8 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
+class _ProfileScreenState {} // فئة فارغة لتجنب أي مشاكل في الترتيب (إن وجدت)
+
 class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
@@ -134,19 +136,33 @@ class _LoginScreenState extends State<LoginScreen> {
                           
                           // تنظيف الرول القديم قبل تحديد الجديد
                           await prefs.remove('user_role');
+                          await prefs.remove('user_name');
+                          await prefs.remove('user_email');
                           
                           String email = _emailController.text.trim().toLowerCase();
 
-                          if (email == "cap@g.com") {
+                          // 💡 التعديل هنا: فحص الإيميل الكامل والـ Role وحفظ البيانات في الكاش للكابتن
+                          if (email == "cap@gmail.com") {
                             await prefs.setString('user_role', 'captain');
+                            await prefs.setString('user_email', 'cap@gmail.com');
+                            await prefs.setString('user_name', 'كابتن مصطفى نصر');
+                            
                             if (mounted) {
                               Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const CaptainMainLayout()));
                             }
                           } else {
+                            // 💡 التعديل هنا: حفظ الرول والبيانات لليوزر والـ Admin وتوجيهه للملف الرئيسي
                             await prefs.setString('user_role', 'user');
-                            String targetDestination = _phoneController.text.isNotEmpty ? _phoneController.text : _emailController.text;
+                            await prefs.setString('user_email', email);
+                            
+                            if (email == "mahmoudfarouk@gmail.com") {
+                              await prefs.setString('user_name', 'محمود فاروق');
+                            } else {
+                              await prefs.setString('user_name', 'مستخدم جديد');
+                            }
+
                             if (mounted) {
-                              Navigator.push(context, MaterialPageRoute(builder: (context) => OtpScreen(destination: targetDestination)));
+                              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const MainLayout()));
                             }
                           }
                         }

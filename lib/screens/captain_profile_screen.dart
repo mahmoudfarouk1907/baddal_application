@@ -1,5 +1,6 @@
 // lib/screens/captain_profile_screen.dart
 
+import 'dart:convert'; // 💡 استدعاء مكتبة الـ JSON لتحليل بيانات التقييمات
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'login_screen.dart'; // استدعاء شاشة اللوجن
@@ -16,9 +17,15 @@ class _CaptainProfileScreenState extends State<CaptainProfileScreen> {
   static const Color primaryGreen = Color(0xFF22C55E);
 
   final TextEditingController _phoneController = TextEditingController();
-  final String _savedEmail = "cap@g.com"; 
+  
+  // 💡 تحديث الإيميل هنا ليكون مطابقاً لإيميل اللوج إن الجديد
+  final String _savedEmail = "cap@gmail.com"; 
   String _savedPhone = "لم يتم ربط رقم هاتف بعد";
   bool _isLoading = true;
+
+  // 💡 متغيرات التقييم الكلي الافتراضية للكابتن
+  double _captainAverageRating = 4.9;
+  int _captainTotalRatings = 120;
 
   @override
   void initState() {
@@ -28,11 +35,34 @@ class _CaptainProfileScreenState extends State<CaptainProfileScreen> {
 
   Future<void> _loadCaptainData() async {
     final prefs = await SharedPreferences.getInstance();
+    
+    // 💡 حساب التقييم الإجمالي لايف من الكاش الموحد للأوردرات
+    List<String> rawRatings = prefs.getStringList('captain_ratings_pool') ?? [];
+    double totalStars = 0.0;
+    
+    if (rawRatings.isNotEmpty) {
+      for (String item in rawRatings) {
+        try {
+          final Map<String, dynamic> ratingData = jsonDecode(item);
+          totalStars += (ratingData['stars'] ?? 0.0);
+        } catch (e) {
+          // لتجنب أي خطأ في القراءة
+        }
+      }
+    }
+
     setState(() {
       _savedPhone = prefs.getString('captain_phone') ?? "لم يتم ربط رقم هاتف بعد";
       if (_savedPhone != "لم يتم ربط رقم هاتف بعد") {
         _phoneController.text = _savedPhone;
       }
+      
+      // 💡 تحديث أرقام ريتينج الكابتن لايف بناءً على التقييمات الحالية
+      if (rawRatings.isNotEmpty) {
+        _captainTotalRatings = 120 + rawRatings.length;
+        _captainAverageRating = totalStars / rawRatings.length;
+      }
+      
       _isLoading = false;
     });
   }
@@ -117,6 +147,21 @@ class _CaptainProfileScreenState extends State<CaptainProfileScreen> {
                   const SizedBox(height: 16),
                   const Text("كابتن تطبيق بدال", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: navyBlue)),
                   Text(_savedEmail, style: const TextStyle(fontSize: 14, color: Colors.grey)),
+                  
+                  // 💡 الجزء الجديد: عرض التقييم الكلي والنجوم لايف للكابتن في بروفايله
+                  const SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.star_rounded, color: Colors.amber, size: 24),
+                      const SizedBox(width: 4),
+                      Text(
+                        "${_captainAverageRating.toStringAsFixed(1)} ($_captainTotalRatings رحلة)",
+                        style: const TextStyle(color: navyBlue, fontSize: 15, fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+
                   const SizedBox(height: 32),
                   Container(
                     padding: const EdgeInsets.all(16),

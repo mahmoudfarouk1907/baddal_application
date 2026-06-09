@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // 1. استيراد المكتبة السحرية هنا
 import 'notifications_screen.dart';
 import 'captain_ride_screen.dart';
 import 'delivery_package_screen.dart';
@@ -6,7 +7,7 @@ import 'supermarket_screen.dart';
 import 'pharmacy_screen.dart';
 import 'multi_order_screen.dart';
 import 'active_order_tracking_screen.dart'; 
-import 'support_complaints_screen.dart';    
+import 'support_complaints_screen.dart';     
 import 'admin_panel_screen.dart';          
 
 class HomeScreen extends StatefulWidget {
@@ -24,9 +25,15 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   late Animation<double> _pulseAnimation;
   final bool _hasActiveOrder = true;
 
+  // 2. تغيير القيم الافتراضية هنا مباشرة لضمان ظهور "محمود فاروق" في أول رن
+  String _userName = "محمود فاروق";
+  String _userEmail = "mahmoudfarouk@gmail.com";
+
   @override
   void initState() {
     super.initState();
+    _loadUserData(); // 3. استدعاء فانكشن تحميل البيانات عند فتح الصفحة
+
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
@@ -35,6 +42,16 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     _pulseAnimation = Tween<double>(begin: 1.0, end: 1.3).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
+  }
+
+  // 4. فانكشن قراءة الاسم والإيميل المحدثة
+  Future<void> _loadUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      // هنا خلينا القيمة الافتراضية تروح للاسم والإيميل الجداد لو الكاش فاضي
+      _userName = prefs.getString('user_name') ?? "محمود فاروق";
+      _userEmail = prefs.getString('user_email') ?? "mahmoudfarouk@gmail.com";
+    });
   }
 
   @override
@@ -210,11 +227,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         textDirection: TextDirection.rtl,
         child: Column(
           children: [
-            const UserAccountsDrawerHeader(
-              decoration: BoxDecoration(color: primaryGreen), // تحويل هيدر القائمة للون الأخضر البراند
-              accountName: Text("أحمد محمد", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white)),
-              accountEmail: Text("ahmed@baddal.com", style: TextStyle(color: Colors.white60)),
-              currentAccountPicture: CircleAvatar(
+            UserAccountsDrawerHeader(
+              decoration: const BoxDecoration(color: primaryGreen), // تحويل هيدر القائمة للون الأخضر البراند
+              accountName: Text(_userName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white)), // ربط الاسم بالمتغير المحدث
+              accountEmail: Text(_userEmail, style: const TextStyle(color: Colors.white60)), // ربط الإيميل بالمتغير المحدث
+              currentAccountPicture: const CircleAvatar(
                 backgroundColor: Colors.white,
                 child: Icon(Icons.person, color: primaryGreen, size: 45),
               ),

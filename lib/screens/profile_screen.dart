@@ -1,21 +1,79 @@
+import 'dart:convert'; // 💡 استدعاء مكتبة الـ JSON لفك وتحليل بيانات التقييمات
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart'; 
-import 'package:shared_preferences/shared_preferences.dart'; // 1. استدعاء مكتبة الحفظ لمسح البيانات عند الخروج
+import 'package:shared_preferences/shared_preferences.dart'; // استدعاء مكتبة الحفظ
 import 'login_screen.dart';
 import 'edit_profile_screen.dart';
 import 'saved_addresses_screen.dart';
 import 'admin_panel_screen.dart'; 
 import 'main_layout.dart'; 
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
   static const Color primaryGreen = Color(0xFF22C55E);
   static const Color navyBlue = Color(0xFF0F172A);
 
-  // جعلنا الإيميل الحالي هو نفسه إيميل الأدمن عشان الزرار يظهرلك فوراً وتجرب براحتك
-  static const String adminEmail = "ahmed@baddal.com"; 
-  static const String currentUserEmail = "ahmed@baddal.com"; 
+  // إيميل الأدمن الثابت للمقارنة (يظهر زر الأدمن لمحمود فاروق فقط)
+  static const String adminEmail = "mahmoudfarouk@gmail.com"; 
+
+  // المتغيرات بتبدأ بقيم فارغة ويتم تحديثها فوراً من الكاش بناءً على تسجيل الدخول
+  String _userName = "";
+  String _userEmail = "";
+
+  // 💡 متغيرات التقييم الكلي الافتراضية للكابتن
+  double _captainAverageRating = 4.9;
+  int _captainTotalRatings = 120;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData(); // قراءة البيانات من كاش الجهاز فور فتح الصفحة
+  }
+
+  // 💡 الفانكشن هنا بقت تفحص إيميل الكابتن وتحسب التقييم الإجمالي لايف من نفس الـ Pool
+  Future<void> _loadUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    String savedEmail = prefs.getString('user_email') ?? "mahmoudfarouk@gmail.com";
+    String savedName = prefs.getString('user_name') ?? "محمود فاروق";
+
+    // حساب التقييم الإجمالي لايف من الكاش الموحد
+    List<String> rawRatings = prefs.getStringList('captain_ratings_pool') ?? [];
+    double totalStars = 0.0;
+    
+    if (rawRatings.isNotEmpty) {
+      for (String item in rawRatings) {
+        try {
+          final Map<String, dynamic> ratingData = jsonDecode(item);
+          totalStars += (ratingData['stars'] ?? 0.0);
+        } catch (e) {
+          // لتجنب أي خطأ في قراءة الكاش القديم
+        }
+      }
+    }
+
+    setState(() {
+      _userEmail = savedEmail;
+      
+      // لو الإيميل المسجل هو إيميل الكابتن، اعرض اسم الكابتن واحسب ريتينجه
+      if (_userEmail == "cap@gmail.com") {
+        _userName = prefs.getString('user_name') ?? "كابتن مصطفى نصر";
+        
+        // تحديث أرقام ريتينج الكابتن لايف بناءً على التقييمات الحالية
+        if (rawRatings.isNotEmpty) {
+          _captainTotalRatings = 120 + rawRatings.length;
+          _captainAverageRating = totalStars / rawRatings.length;
+        }
+      } else {
+        _userName = savedName;
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -72,15 +130,36 @@ class ProfileScreen extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 16),
-              const Text(
-                'محمود فاروق',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: navyBlue),
+              
+              // عرض الاسم الديناميكي المربوط بالحالة الحالية
+              Text(
+                _userName, 
+                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: navyBlue),
               ),
               const SizedBox(height: 4),
-              const Text(
-                currentUserEmail,
-                style: TextStyle(color: Colors.grey, fontSize: 14, fontWeight: FontWeight.w500),
+              
+              // عرض الإيميل الديناميكي المربوط بالحالة الحالية
+              Text(
+                _userEmail, 
+                style: const TextStyle(color: Colors.grey, fontSize: 14, fontWeight: FontWeight.w500),
               ),
+              
+              // 💡 عرض التقييم الكلي والنجوم لايف للكابتن فقط
+              if (_userEmail == "cap@gmail.com") ...[
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.star_rounded, color: Colors.amber, size: 22),
+                    const SizedBox(width: 4),
+                    Text(
+                      "${_captainAverageRating.toStringAsFixed(1)} ($_captainTotalRatings رحلة)",
+                      style: const TextStyle(color: navyBlue, fontSize: 15, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ],
+              
               const SizedBox(height: 32),
 
               // --- كارد الخيارات ---
@@ -95,8 +174,9 @@ class ProfileScreen extends StatelessWidget {
                     _buildProfileOption(
                       icon: Icons.edit_outlined,
                       title: 'تعديل البيانات الشخصية',
-                      onTap: () {
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => const EditProfileScreen()));
+                      onTap: () async {
+                        await Navigator.push(context, MaterialPageRoute(builder: (context) => const EditProfileScreen()));
+                        _loadUserData(); 
                       },
                     ),
                     Divider(color: Colors.grey.shade100, height: 1, thickness: 1.2),
@@ -119,8 +199,8 @@ class ProfileScreen extends StatelessWidget {
                 ),
               ),
 
-              // هنا بيحصل الفحص السحري: لو الحساب المفتوح هو حساب الأدمن، بيظهر له الخيار ده تلقائياً
-              if (currentUserEmail == adminEmail) ...[
+              // فحص الأدمن التلقائي بحسب الإيميل المقروء (يظهر فقط لـ mahmoudfarouk@gmail.com)
+              if (_userEmail == adminEmail) ...[
                 const SizedBox(height: 24),
                 SizedBox(
                   width: double.infinity,
@@ -147,17 +227,17 @@ class ProfileScreen extends StatelessWidget {
               
               const SizedBox(height: 32),
 
-              // --- زر تسجيل الخروج المحدث ---
+              // --- زر تسجيل الخروج ---
               SizedBox(
                 width: double.infinity,
                 height: 55,
                 child: OutlinedButton.icon(
                   onPressed: () async {
-                    // 2. مسح نوع الحساب المحفوظ في الجهاز تماماً عند تسجيل الخروج
                     final prefs = await SharedPreferences.getInstance();
                     await prefs.remove('user_role'); 
+                    await prefs.remove('user_name');
+                    await prefs.remove('user_email');
 
-                    // الانتقال لصفحة اللوج إن وتصفير الـ Navigation Stack
                     if (context.mounted) {
                       Navigator.pushAndRemoveUntil(
                         context,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart'; // 1. استيراد الحزمة الجديدة هنا
 
 class SupportComplaintsScreen extends StatefulWidget {
   const SupportComplaintsScreen({super.key});
@@ -30,7 +31,8 @@ class _SupportComplaintsScreenState extends State<SupportComplaintsScreen> {
     super.dispose();
   }
 
-  void _submitComplaint() {
+  // 2. الفانكشن المعدلة لإرسال الإيميل مباشرة
+  Future<void> _submitComplaint() async {
     if (_formKey.currentState!.validate()) {
       if (_selectedCategory == null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -42,27 +44,50 @@ class _SupportComplaintsScreenState extends State<SupportComplaintsScreen> {
         );
         return;
       }
-      
-      // محاكاة إرسال البيانات للـ Backend بنجاح
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Row(
-            children: [
-              Icon(Icons.check_circle_rounded, color: Colors.white),
-              SizedBox(width: 12),
-              Text("تم إرسال بلاغك بنجاح وجاري مراجعته من الإدارة", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-            ],
-          ),
-          backgroundColor: primaryGreen,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      );
 
-      _detailsController.clear();
-      setState(() {
-        _selectedCategory = null;
-      });
+      // تجهيز بيانات الإيميل
+      final String email = 'baddal.support@gmail.com';
+      final String subject = Uri.encodeComponent('بلاغ دعم فني - تطبيق بدال: $_selectedCategory');
+      final String body = Uri.encodeComponent('تفاصيل البلاغ:\n${_detailsController.text}');
+      
+      final Uri emailUri = Uri.parse('mailto:$email?subject=$subject&body=$body');
+
+      try {
+        // محاولة فتح تطبيق الإيميل على جهاز المستخدم
+        if (await launchUrl(emailUri, mode: LaunchMode.externalApplication)) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Row(
+                children: [
+                  Icon(Icons.check_circle_rounded, color: Colors.white),
+                  SizedBox(width: 12),
+                  Text("جاري فتح تطبيق البريد لإرسال بلاغك للإدارة...", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                ],
+              ),
+              backgroundColor: primaryGreen,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          );
+
+          // تنظيف الحقول بعد التوجيه الناجح
+          _detailsController.clear();
+          setState(() {
+            _selectedCategory = null;
+          });
+        } else {
+          throw 'Could not launch email app';
+        }
+      } catch (e) {
+        // لو الجهاز مفيش فيه تطبيق إيميل أو حصل خطأ
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("عذراً، لم نتمكن من فتح تطبيق البريد. يمكنك مراسلتنا مباشرة على baddal.support@gmail.com", style: TextStyle(fontWeight: FontWeight.bold)),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     }
   }
 
@@ -89,7 +114,6 @@ class _SupportComplaintsScreenState extends State<SupportComplaintsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // نص ترحيبي توضيحي
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(color: primaryGreen.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(12)),
@@ -99,7 +123,7 @@ class _SupportComplaintsScreenState extends State<SupportComplaintsScreen> {
                       SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          "مرحباً بك في مركز مساعدة بدال. نحن هنا لحل أي مشكلة واجهتك، يرجى ملء البيانات وسيتم التواصل معك خلال 24 ساعة.",
+                          "مرحباً بك في مركز مساعدة بدال. نحن هنا لحل أي مشكلة واجهتك، يرجى ملء البيانات وسيتم فتح البريد الإلكتروني لإرسالها مباشرة للإدارة.",
                           style: TextStyle(color: navyBlue, fontWeight: FontWeight.bold, fontSize: 13, height: 1.5),
                         ),
                       ),
@@ -107,15 +131,12 @@ class _SupportComplaintsScreenState extends State<SupportComplaintsScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
-
-                // حقل اختيار نوع المشكلة (تم تصليحه بالكامل)
                 const Text("نوع المشكلة أو الشكوى", style: TextStyle(fontWeight: FontWeight.w900, color: navyBlue, fontSize: 14)),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
                   value: _selectedCategory,
-                  dropdownColor: Colors.white, // التعديل الجوهري: يخلي القائمة المنسدلة بيضاء ناصعة لما تفتح
+                  dropdownColor: Colors.white,
                   hint: Text("اختر تصنيف المشكلة...", style: TextStyle(color: navyBlue.withValues(alpha: 0.35), fontWeight: FontWeight.bold, fontSize: 14)),
-                  // تأكيد تلوين النص بالـ navyBlue بوضوح لكل عنصر داخل القائمة
                   items: _categories.map((cat) => DropdownMenuItem(
                     value: cat, 
                     child: Text(
@@ -128,8 +149,6 @@ class _SupportComplaintsScreenState extends State<SupportComplaintsScreen> {
                   decoration: _inputDecoration(),
                 ),
                 const SizedBox(height: 20),
-
-                // حقل كتابة تفاصيل الشكوى
                 const Text("تفاصيل المشكلة بالكامل", style: TextStyle(fontWeight: FontWeight.w900, color: navyBlue, fontSize: 14)),
                 const SizedBox(height: 8),
                 TextFormField(
@@ -156,8 +175,6 @@ class _SupportComplaintsScreenState extends State<SupportComplaintsScreen> {
                   ),
                 ),
                 const SizedBox(height: 30),
-
-                // زر إرسال الشكوى
                 SizedBox(
                   width: double.infinity,
                   height: 52,
