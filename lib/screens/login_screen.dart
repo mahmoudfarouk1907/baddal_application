@@ -1,3 +1,5 @@
+// lib/screens/login_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart'; 
@@ -5,6 +7,10 @@ import 'signup_screen.dart';
 import 'otp_screen.dart'; 
 import 'main_layout.dart';
 import 'captain_orders_screen.dart'; 
+
+// ⬇️ استيراد لوحات التحكم الصحيحة والمطابقة لملفات مشروعك الحالية
+import 'admin_deposits_dashboard.dart';
+import 'admin_panel_screen.dart'; // الملف الصحيح من شجرة ملفاتك 🎯
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -134,15 +140,35 @@ class _LoginScreenState extends State<LoginScreen> {
                         if (_formKey.currentState!.validate()) {
                           final prefs = await SharedPreferences.getInstance();
                           
-                          // تنظيف الرول القديم قبل تحديد الجديد
+                          // تنظيف كامل للبيانات القديمة لبدء جلسة نظيفة بحساب الصلاحية الصحيح
                           await prefs.remove('user_role');
                           await prefs.remove('user_name');
                           await prefs.remove('user_email');
                           
                           String email = _emailController.text.trim().toLowerCase();
 
-                          // 💡 التعديل هنا: فحص الإيميل الكامل والـ Role وحفظ البيانات في الكاش للكابتن
-                          if (email == "cap@gmail.com") {
+                          // 👑 فحص وتوجيه الأدمن الرئيسي للنظام إلى صفحة الأدمن الصحيحة بالمشروع
+                          if (email == "ad@g.com") {
+                            await prefs.setString('user_role', 'main_admin');
+                            await prefs.setString('user_email', 'ad@g.com');
+                            await prefs.setString('user_name', 'الأدمن الرئيسي');
+                            
+                            if (mounted) {
+                              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const AdminPanelScreen()));
+                            }
+                          }
+                          // 💵 فحص وتوجيه أدمن مراجعة الكاش والمحفظة
+                          else if (email == "adcash@g.com") {
+                            await prefs.setString('user_role', 'cash_admin');
+                            await prefs.setString('user_email', 'adcash@g.com');
+                            await prefs.setString('user_name', 'أدمن الخزنة والكاش');
+                            
+                            if (mounted) {
+                              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const AdminDepositsDashboard()));
+                            }
+                          }
+                          // 🏍️ فحص وتوجيه حساب الكابتن المعتاد
+                          else if (email == "cap@gmail.com") {
                             await prefs.setString('user_role', 'captain');
                             await prefs.setString('user_email', 'cap@gmail.com');
                             await prefs.setString('user_name', 'كابتن مصطفى نصر');
@@ -150,8 +176,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             if (mounted) {
                               Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const CaptainMainLayout()));
                             }
-                          } else {
-                            // 💡 التعديل هنا: حفظ الرول والبيانات لليوزر والـ Admin وتوجيهه للملف الرئيسي
+                          } 
+                          // 👤 أي بريد إلكتروني آخر يسجل دخول كعميل/مستخدم عادي
+                          else {
                             await prefs.setString('user_role', 'user');
                             await prefs.setString('user_email', email);
                             

@@ -1,12 +1,13 @@
 // lib/screens/captain_orders_screen.dart
 
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // مكتبة قراءة الكاش
 import 'captain_active_order_screen.dart';
 import 'captain_wallet_screen.dart';
 import 'captain_profile_screen.dart'; 
 import 'captain_notifications_screen.dart';
 
-// 👇 الكلاس المجمع الرئيسي اللي الـ main.dart قالبة الدنيا عليه
+// الكلاس المجمع الرئيسي
 class CaptainMainLayout extends StatefulWidget {
   const CaptainMainLayout({super.key});
 
@@ -18,11 +19,23 @@ class _CaptainMainLayoutState extends State<CaptainMainLayout> {
   int _selectedIndex = 0;
   static const Color primaryGreen = Color(0xFF22C55E);
 
-  final List<Widget> _screens = [
-    const AvailableOrdersScreen(), 
-    const CaptainWalletScreen(),   
-    const CaptainProfileScreen(),  
-  ];
+  // لستة الشاشات الأساسية في التطبيق
+  late final List<Widget> _screens;
+
+  @override
+  void initState() {
+    super.initState();
+    _screens = [
+      // بنباصي دالة الانتقال للمحفظة عشان الكابتن لو ضغط على البنر يروح للمحفظة علطول
+      AvailableOrdersScreen(onGoToWallet: () {
+        setState(() {
+          _selectedIndex = 1; // رقم index شاشة المحفظة
+        });
+      }), 
+      const CaptainWalletScreen(),   
+      const CaptainProfileScreen(),  
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -68,9 +81,11 @@ class _CaptainMainLayoutState extends State<CaptainMainLayout> {
   }
 }
 
-// --- شاشة عرض كروت الطلبات المتاحة ---
+// --- شاشة عرض كروت الطلبات المتاحة (المعدلة بالبنر المرن لإنهاء اليوم) ---
 class AvailableOrdersScreen extends StatefulWidget {
-  const AvailableOrdersScreen({super.key});
+  final VoidCallback onGoToWallet; // دالة للانتقال للمحفظة
+
+  const AvailableOrdersScreen({super.key, required this.onGoToWallet});
 
   @override
   State<AvailableOrdersScreen> createState() => _AvailableOrdersScreenState();
@@ -79,7 +94,11 @@ class AvailableOrdersScreen extends StatefulWidget {
 class _AvailableOrdersScreenState extends State<AvailableOrdersScreen> {
   static const Color navyBlue = Color(0xFF0F172A);
   static const Color primaryGreen = Color(0xFF22C55E);
+  static const Color debtColor = Color(0xFF991B1B);
   static const Color backgroundColor = Color(0xFFF8FAFC);
+
+  bool _isBlocked = false; // بنستخدمها هنا لتحديد لو المديونية عالية ومحتاج تنبيه نهاية اليوم
+  bool _isLoading = true;
 
   final List<Map<String, dynamic>> _availableOrders = [
     {
@@ -97,6 +116,21 @@ class _AvailableOrdersScreenState extends State<AvailableOrdersScreen> {
       "type": "normal", 
     },
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _checkBlockStatus();
+  }
+
+  // دالة قراءة حالة المديونية العالية من الكاش
+  Future<void> _checkBlockStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _isBlocked = prefs.getBool('is_captain_blocked') ?? false;
+      _isLoading = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -128,77 +162,126 @@ class _AvailableOrdersScreenState extends State<AvailableOrdersScreen> {
             Container(
               width: 10,
               height: 10,
-              decoration: const BoxDecoration(color: primaryGreen, shape: BoxShape.circle),
+              decoration: const BoxDecoration(
+                color: primaryGreen, // دايمًا متصل وأخضر عشان ميعطلش يومه
+                shape: BoxShape.circle
+              ),
             ),
             const SizedBox(width: 6),
-            const Text("متصل", style: TextStyle(color: primaryGreen, fontWeight: FontWeight.bold, fontSize: 12)),
+            const Text(
+              "متصل", 
+              style: TextStyle(color: primaryGreen, fontWeight: FontWeight.bold, fontSize: 12)
+            ),
           ],
         ),
         leadingWidth: 80,
       ),
       body: Directionality(
         textDirection: TextDirection.rtl,
-        child: ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: _availableOrders.length,
-          itemBuilder: (context, index) {
-            final order = _availableOrders[index];
-            return Container(
-              margin: const EdgeInsets.only(bottom: 16),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.grey.shade100, width: 1.2),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator(color: primaryGreen))
+            : Column(
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(order["orderId"], style: const TextStyle(color: navyBlue, fontWeight: FontWeight.bold)),
-                      Text("${order["price"].toStringAsFixed(0)} جنيه", style: const TextStyle(color: primaryGreen, fontWeight: FontWeight.w900, fontSize: 18)),
-                    ],
-                  ),
-                  const Divider(height: 24),
-                  Text("من: ${order["pickup"]}", style: const TextStyle(color: navyBlue, fontSize: 14)),
-                  const SizedBox(height: 8),
-                  Text("إلى: ${order["dropoff"]}", style: const TextStyle(color: navyBlue, fontSize: 14)),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryGreen,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        elevation: 0,
-                      ),
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text("تم قبول الطلب ${order["orderId"]} بنجاح!"), backgroundColor: primaryGreen),
-                        );
-
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => CaptainActiveOrderScreen(
-                              orderId: order["orderId"],
-                              orderType: order["type"],
-                              orderPrice: order["price"], 
+                  // 🚨 البنر التحذيري المرن بيظهر فوق الأوردرات لو مديونته تخطت الـ 500 جنيه ومبيقفلش الشاشة
+                  if (_isBlocked)
+                    Container(
+                      width: double.infinity,
+                      color: const Color(0xFFFEF2F2),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Colors.red.shade100, width: 1))),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.dark_mode_rounded, color: debtColor, size: 22),
+                          const SizedBox(width: 10),
+                          const Expanded(
+                            child: Text(
+                              "تنبيه المنصة: تخطيت حد الـ 500 جنيه مديونية. يمكنك إكمال عملك الآن بشكل طبيعي، ويلزم تصفية الحساب فور انتهاء اليوم لتجنب إيقاف الاستقبال غداً.",
+                              style: TextStyle(color: debtColor, fontSize: 12, fontWeight: FontWeight.bold, height: 1.4),
                             ),
                           ),
-                        );
-                      },
-                      child: const Text("قبول الطلب وبدء المشوار 🚀", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                          TextButton(
+                            onPressed: widget.onGoToWallet,
+                            style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: const Size(50, 30)),
+                            child: const Text(
+                              "المحفظة", 
+                              style: TextStyle(color: navyBlue, fontSize: 12, fontWeight: FontWeight.bold, decoration: TextDecoration.underline),
+                            ),
+                          )
+                        ],
+                      ),
                     ),
-                  )
+                  
+                  // قائمة الأوردرات شغالة وسلسة في كل الحالات
+                  Expanded(
+                    child: ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: _availableOrders.length,
+                      itemBuilder: (context, index) {
+                        final order = _availableOrders[index];
+                        return _buildOrderCard(order);
+                      },
+                    ),
+                  ),
                 ],
               ),
-            );
-          },
-        ),
+      ),
+    );
+  }
+
+  // الـ Widget الخاصة بكارت الأوردر المفصول لتنظيم الكود
+  Widget _buildOrderCard(Map<String, dynamic> order) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade100, width: 1.2),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(order["orderId"], style: const TextStyle(color: navyBlue, fontWeight: FontWeight.bold)),
+              Text("${order["price"].toStringAsFixed(0)} جنيه", style: const TextStyle(color: primaryGreen, fontWeight: FontWeight.w900, fontSize: 18)),
+            ],
+          ),
+          const Divider(height: 24),
+          Text("من: ${order["pickup"]}", style: const TextStyle(color: navyBlue, fontSize: 14)),
+          const SizedBox(height: 8),
+          Text("إلى: ${order["dropoff"]}", style: const TextStyle(color: navyBlue, fontSize: 14)),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryGreen,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                elevation: 0,
+              ),
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text("تم قبول الطلب ${order["orderId"]} بنجاح!"), backgroundColor: primaryGreen),
+                );
+
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CaptainActiveOrderScreen(
+                      orderId: order["orderId"],
+                      orderType: order["type"],
+                      orderPrice: order["price"], 
+                    ),
+                  ),
+                );
+              },
+              child: const Text("قبول الطلب وبدء المشوار 🚀", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            ),
+          )
+        ],
       ),
     );
   }

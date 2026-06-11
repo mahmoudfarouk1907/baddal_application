@@ -1,5 +1,7 @@
+// lib/screens/home_screen.dart
+
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart'; // 1. استيراد المكتبة السحرية هنا
+import 'package:shared_preferences/shared_preferences.dart'; 
 import 'notifications_screen.dart';
 import 'captain_ride_screen.dart';
 import 'delivery_package_screen.dart';
@@ -19,20 +21,20 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
   static const Color navyBlue = Color(0xFF0F172A);
-  static const Color primaryGreen = Color(0xFF22C55E); // الأخضر البراند الأساسي لتطبيق بدّال
+  static const Color primaryGreen = Color(0xFF22C55E); 
 
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
   final bool _hasActiveOrder = true;
 
-  // 2. تغيير القيم الافتراضية هنا مباشرة لضمان ظهور "محمود فاروق" في أول رن
   String _userName = "محمود فاروق";
   String _userEmail = "mahmoudfarouk@gmail.com";
+  String _userRole = "user"; // 🔑 متغير جديد لحفظ صلاحية المستخدم الحالي
 
   @override
   void initState() {
     super.initState();
-    _loadUserData(); // 3. استدعاء فانكشن تحميل البيانات عند فتح الصفحة
+    _loadUserData(); 
 
     _pulseController = AnimationController(
       vsync: this,
@@ -44,13 +46,13 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
 
-  // 4. فانكشن قراءة الاسم والإيميل المحدثة
+  // 🔄 الفانكشن المحدثة لجلب الاسم والإيميل والـ Role معاً
   Future<void> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      // هنا خلينا القيمة الافتراضية تروح للاسم والإيميل الجداد لو الكاش فاضي
       _userName = prefs.getString('user_name') ?? "محمود فاروق";
       _userEmail = prefs.getString('user_email') ?? "mahmoudfarouk@gmail.com";
+      _userRole = prefs.getString('user_role') ?? "user"; // جلب الصلاحية (main_admin, cash_admin, user)
     });
   }
 
@@ -64,10 +66,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
-      
-      // الـ Drawer الأخضر النظيف
       drawer: _buildDrawer(context),
-
       body: SafeArea(
         child: Stack(
           children: [
@@ -78,7 +77,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // الجزء العلوي (Header)
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -111,7 +109,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       ),
                       const SizedBox(height: 24),
 
-                      // كارت البانر الإعلاني
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.all(20),
@@ -140,7 +137,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       ),
                       const SizedBox(height: 24),
 
-                      // شبكة الخدمات
                       const Text(
                         "اختر الخدمة التي تحتاجها:",
                         style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
@@ -162,18 +158,17 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           _buildServiceCard(context, title: "طلبات الصيدلية", subtitle: "علاجاتك لحد باب بيتك", icon: Icons.local_pharmacy, color: Colors.red, onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PharmacyScreen()))),
                         ],
                       ),
-                      const SizedBox(height: 120), // مساحة أمان مريحة تحت لمنع التداخل
+                      const SizedBox(height: 120), 
                     ],
                   ),
                 ),
               ),
             ),
 
-            // تثبيت الأيقونة النباضة الخضراء في المسافة الذهبية الفاضية على اليمين تماماً
             if (_hasActiveOrder)
               Positioned(
-                bottom: 80, // المسافة الجديدة المتعدلة لتنزيل الأيقونة قليلاً
-                right: 24,  // تثبيت الأيقونة على اليمين في الفراغ المتاح
+                bottom: 80, 
+                right: 24,  
                 child: _buildPulsingFAB(),
               ),
           ],
@@ -182,7 +177,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
 
-  // بناء ويدجت الأيقونة النباضة التفاعلية
   Widget _buildPulsingFAB() {
     return AnimatedBuilder(
       animation: _pulseAnimation,
@@ -219,7 +213,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
 
-  // بناء الـ Drawer المتناسق باللون الأخضر
+  // 🚪 بناء الـ Drawer مع إخفاء زرار الأدمن تماماً عن اليوزرز العاديين
   Widget _buildDrawer(BuildContext context) {
     return Drawer(
       backgroundColor: Colors.white,
@@ -228,9 +222,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         child: Column(
           children: [
             UserAccountsDrawerHeader(
-              decoration: const BoxDecoration(color: primaryGreen), // تحويل هيدر القائمة للون الأخضر البراند
-              accountName: Text(_userName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white)), // ربط الاسم بالمتغير المحدث
-              accountEmail: Text(_userEmail, style: const TextStyle(color: Colors.white60)), // ربط الإيميل بالمتغير المحدث
+              decoration: const BoxDecoration(color: primaryGreen), 
+              accountName: Text(_userName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white)), 
+              accountEmail: Text(_userEmail, style: const TextStyle(color: Colors.white60)), 
               currentAccountPicture: const CircleAvatar(
                 backgroundColor: Colors.white,
                 child: Icon(Icons.person, color: primaryGreen, size: 45),
@@ -238,8 +232,22 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             ),
             _buildDrawerItem(icon: Icons.location_searching_rounded, title: "تتبع طلبي الحالي", onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => const ActiveOrderTrackingScreen())); }),
             _buildDrawerItem(icon: Icons.headset_mic_rounded, title: "الدعم الفني والشكاوى", onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => const SupportComplaintsScreen())); }),
-            const Divider(color: Colors.grey, thickness: 0.5),
-            _buildDrawerItem(icon: Icons.admin_panel_settings_rounded, title: "لوحة تحكم المسؤول", iconColor: Colors.red.shade600, textColor: Colors.red.shade600, onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminPanelScreen())); }),
+            
+            // 🔒 تعديل أمني: الزرار الأحمر والفاصل لن يظهرا إلا إذا كان الحساب "main_admin" فقط
+            if (_userRole == 'main_admin') ...[
+              const Divider(color: Colors.grey, thickness: 0.5),
+              _buildDrawerItem(
+                icon: Icons.admin_panel_settings_rounded, 
+                title: "لوحة تحكم المسؤول", 
+                iconColor: Colors.red.shade600, 
+                textColor: Colors.red.shade600, 
+                onTap: () { 
+                  Navigator.pop(context); 
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminPanelScreen())); 
+                },
+              ),
+            ],
+            
             const Spacer(),
             const Padding(
               padding: EdgeInsets.all(20.0),

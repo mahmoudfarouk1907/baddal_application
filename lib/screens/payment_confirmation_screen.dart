@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 class PaymentConfirmationScreen extends StatefulWidget {
   final int totalAmount;
@@ -18,9 +17,6 @@ class PaymentConfirmationScreen extends StatefulWidget {
 }
 
 class _PaymentConfirmationScreenState extends State<PaymentConfirmationScreen> {
-  final String walletNumber = "01012345678";
-  final String instaPayId = "baddal@instapay";
-  
   // استخدام نفس اللون الداكن لضمان أعلى تباين ووضوح
   static const Color darkText = Color(0xFF0F172A);
 
@@ -29,7 +25,7 @@ class _PaymentConfirmationScreenState extends State<PaymentConfirmationScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text("تأكيد الدفع", style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text("تأكيد الطلب", style: TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: Colors.green.shade700,
         foregroundColor: Colors.white,
         centerTitle: true,
@@ -39,7 +35,9 @@ class _PaymentConfirmationScreenState extends State<PaymentConfirmationScreen> {
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20.0),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // كارت الحساب الكلي واسم الخدمة
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(24),
@@ -50,57 +48,87 @@ class _PaymentConfirmationScreenState extends State<PaymentConfirmationScreen> {
                 ),
                 child: Column(
                   children: [
-                    // تعديل: تحويل اسم الخدمة للون داكن وخط عريض بدلاً من الرمادي الشفاف
                     Text(
                       widget.serviceName, 
-                      style: const TextStyle(fontSize: 16, color: darkText, fontWeight: FontWeight.w600),
+                      style: const TextStyle(fontSize: 18, color: darkText, fontWeight: FontWeight.bold),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 12),
+                    const Text(
+                      "إجمالي حساب الرحلة",
+                      style: TextStyle(fontSize: 14, color: darkText, fontWeight: FontWeight.w500),
+                    ),
+                    const SizedBox(height: 4),
                     Text(
                       "${widget.totalAmount} جنيه",
-                      style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.green.shade800),
+                      style: TextStyle(fontSize: 34, fontWeight: FontWeight.bold, color: Colors.green.shade800),
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: 30),
+
+              // عنوان تفاصيل الطلب والدفع
               const Text(
-                "قم بالتحويل إلى البيانات التالية:", 
+                "تفاصيل الطلب والدفع عند الاستلام:", 
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: darkText),
               ),
               const SizedBox(height: 16),
-              _buildTransferDetails(
-                title: widget.method == "vodafone" ? "رقم فودافون كاش" : "عنوان InstaPay",
-                value: widget.method == "vodafone" ? walletNumber : instaPayId,
-                icon: widget.method == "vodafone" ? Icons.phone_android : Icons.account_balance_wallet,
-              ),
-              const SizedBox(height: 40),
-              const Text(
-                "ارفع صورة إيصال التحويل للتأكيد", 
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: darkText),
-              ),
-              const SizedBox(height: 12),
-              InkWell(
-                onTap: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("جاري فتح الاستوديو..."))),
-                child: Container(
-                  width: double.infinity,
-                  height: 150,
-                  decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey.shade300)),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.cloud_upload_outlined, size: 40, color: Colors.green.shade700),
-                      const SizedBox(height: 8),
-                      const Text(
-                        "اضغط هنا لرفع سكرين شوت التحويل",
-                        style: TextStyle(fontWeight: FontWeight.w600, color: darkText, fontSize: 14),
-                      ),
-                    ],
-                  ),
+
+              // 💡 الكارت الجديد البديل لفودافون كاش: بيعرض تفاصيل المحطات والدفع كاش
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8)],
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
+                child: Column(
+                  children: [
+                    // تفاصيل نوع الخدمة
+                    _buildOrderRow(Icons.local_shipping_rounded, "نوع الخدمة:", widget.serviceName),
+                    const Divider(height: 24),
+                    
+                    // تفاصيل طريقة الدفع
+                    _buildOrderRow(Icons.money_rounded, "طريقة الدفع:", "نقداً عند الاستلام (Cash)"),
+                    const Divider(height: 24),
+
+                    // إجمالي الحساب الكلي
+                    _buildOrderRow(Icons.payments_rounded, "الحساب الكلي المطلوب:", "${widget.totalAmount} جنيه", isTotal: true),
+                  ],
                 ),
               ),
+              
+              const SizedBox(height: 24),
+
+              // 💡 الملحوظة الهامة جداً لليوزر (حساب الخدمة فقط)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.amber.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.amber.shade300),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.info_outline_rounded, color: Colors.amber, size: 24),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        "ملحوظة: هذا المبلغ يشمل تكلفة تقديم الخدمة ومصاريف الرحلة فقط لا غير.",
+                        style: TextStyle(color: darkText, fontSize: 13, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
               const SizedBox(height: 40),
+
+              // زرار إرسال الطلب النهائي
               SizedBox(
                 width: double.infinity,
                 height: 54,
@@ -114,18 +142,23 @@ class _PaymentConfirmationScreenState extends State<PaymentConfirmationScreen> {
                     showDialog(
                       context: context,
                       builder: (context) => AlertDialog(
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                         title: const Icon(Icons.check_circle, color: Colors.green, size: 60),
-                        content: const Text("تم استلام طلبك بنجاح!", textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold)),
+                        content: const Text(
+                          "تم استلام طلبك بنجاح!\nالكابتن في طريقه إليك الآن وسيتم الدفع كاش.", 
+                          textAlign: TextAlign.center, 
+                          style: TextStyle(fontWeight: FontWeight.bold, color: darkText),
+                        ),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst), 
-                            child: const Text("العودة للرئيسية", style: TextStyle(fontWeight: FontWeight.bold)),
+                            child: const Text("العودة للرئيسية", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                           )
                         ],
                       ),
                     );
                   },
-                  child: const Text("إرسال الطلب الآن", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  child: const Text("تأكيد وإرسال الطلب كاش", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 ),
               ),
             ],
@@ -135,33 +168,30 @@ class _PaymentConfirmationScreenState extends State<PaymentConfirmationScreen> {
     );
   }
 
-  Widget _buildTransferDetails({required String title, required String value, required IconData icon}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5)]),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.green.shade700, size: 24),
-          const SizedBox(width: 16),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start, 
-            children: [
-              // تعديل: تغميق لون العنوان الفرعي لزيادة حدة القراءة لضعاف النظر
-              Text(title, style: TextStyle(color: darkText.withValues(alpha: 0.7), fontSize: 13, fontWeight: FontWeight.w500)), 
-              const SizedBox(height: 4),
-              Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: darkText)),
-            ],
+  // دالة مساعدة مخصصة لبناء صفوف تفاصيل الأوردر بشكل متناسق
+  Widget _buildOrderRow(IconData icon, String label, String value, {bool isTotal = false}) {
+    return Row(
+      children: [
+        Icon(icon, color: isTotal ? Colors.green.shade700 : Colors.grey.shade600, size: 24),
+        const SizedBox(width: 12),
+        Text(
+          label, 
+          style: TextStyle(
+            fontSize: 14, 
+            fontWeight: isTotal ? FontWeight.bold : FontWeight.w500, 
+            color: darkText
           ),
-          const Spacer(),
-          IconButton(
-            icon: const Icon(Icons.copy, size: 22, color: darkText), 
-            onPressed: () {
-              Clipboard.setData(ClipboardData(text: value));
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("تم نسخ البيانات بنجاح")));
-            },
+        ),
+        const Spacer(),
+        Text(
+          value, 
+          style: TextStyle(
+            fontSize: isTotal ? 18 : 15, 
+            fontWeight: FontWeight.bold, 
+            color: isTotal ? Colors.green.shade800 : darkText
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
