@@ -1,3 +1,5 @@
+// lib/screens/profile_screen.dart
+
 import 'dart:convert'; // 💡 استدعاء مكتبة الـ JSON لفك وتحليل بيانات التقييمات
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart'; 
@@ -19,12 +21,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   static const Color primaryGreen = Color(0xFF22C55E);
   static const Color navyBlue = Color(0xFF0F172A);
 
-  // إيميل الأدمن الثابت للمقارنة (يظهر زر الأدمن لمحمود فاروق فقط)
-  static const String adminEmail = "mahmoudfarouk@gmail.com"; 
+  // 👑 تم التعديل للإيميل المعتمد والمنظف في صفحة اللوج إن لمنع التداخل
+  static const String adminEmail = "ad@g.com"; 
 
-  // المتغيرات بتبدأ بقيم فارغة ويتم تحديثها فوراً من الكاش بناءً على تسجيل الدخول
+  // المتغيرات تبدأ فارغة تماماً لضمان عدم عرض أي داتا وهمية قبل القراءة من الكاش
   String _userName = "";
   String _userEmail = "";
+  String _userPhone = "";
 
   // 💡 متغيرات التقييم الكلي الافتراضية للكابتن
   double _captainAverageRating = 4.9;
@@ -39,8 +42,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   // 💡 الفانكشن هنا بقت تفحص إيميل الكابتن وتحسب التقييم الإجمالي لايف من نفس الـ Pool
   Future<void> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
-    String savedEmail = prefs.getString('user_email') ?? "mahmoudfarouk@gmail.com";
-    String savedName = prefs.getString('user_name') ?? "محمود فاروق";
+    
+    // قراءة البيانات الفعلية للمستخدم الحالي بدون وضع قيم افتراضية فاضحة لأي مستخدم آخر
+    String savedEmail = prefs.getString('user_email') ?? "";
+    String savedName = prefs.getString('user_name') ?? "";
+    String savedPhone = prefs.getString('user_phone') ?? "";
 
     // حساب التقييم الإجمالي لايف من الكاش الموحد
     List<String> rawRatings = prefs.getStringList('captain_ratings_pool') ?? [];
@@ -59,10 +65,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     setState(() {
       _userEmail = savedEmail;
+      _userPhone = savedPhone;
       
       // لو الإيميل المسجل هو إيميل الكابتن، اعرض اسم الكابتن واحسب ريتينجه
       if (_userEmail == "cap@gmail.com") {
-        _userName = prefs.getString('user_name') ?? "كابتن مصطفى نصر";
+        _userName = savedName.isNotEmpty ? savedName : "كابتن مصطفى نصر";
         
         // تحديث أرقام ريتينج الكابتن لايف بناءً على التقييمات الحالية
         if (rawRatings.isNotEmpty) {
@@ -70,7 +77,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _captainAverageRating = totalStars / rawRatings.length;
         }
       } else {
-        _userName = savedName;
+        // إذا كان مستخدم عادي أو أدمن يقرأ اسمه الفعلي من الكاش، وإذا كان فارغاً نضع اسم افتراضي سليم
+        _userName = savedName.isNotEmpty ? savedName : "مستخدم بدّال";
       }
     });
   }
@@ -138,9 +146,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               const SizedBox(height: 4),
               
-              // عرض الإيميل الديناميكي المربوط بالحالة الحالية
+              // عرض البيانات الفرعية (الإيميل لو متاح، وإذا كان فارغاً يعرض رقم الهاتف لمنع التعليق)
               Text(
-                _userEmail, 
+                _userEmail.isNotEmpty ? _userEmail : _userPhone, 
                 style: const TextStyle(color: Colors.grey, fontSize: 14, fontWeight: FontWeight.w500),
               ),
               
@@ -199,7 +207,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
 
-              // فحص الأدمن التلقائي بحسب الإيميل المقروء (يظهر فقط لـ mahmoudfarouk@gmail.com)
+              // فحص الأدمن التلقائي بحسب الإيميل المقروء والمطابق للوحة التحكم الحالية لقفل الأمان
               if (_userEmail == adminEmail) ...[
                 const SizedBox(height: 24),
                 SizedBox(
@@ -227,16 +235,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
               
               const SizedBox(height: 32),
 
-              // --- زر تسجيل الخروج ---
+              // --- زر تسجيل الخروج الآمن والكامل ---
               SizedBox(
                 width: double.infinity,
                 height: 55,
                 child: OutlinedButton.icon(
                   onPressed: () async {
                     final prefs = await SharedPreferences.getInstance();
-                    await prefs.remove('user_role'); 
-                    await prefs.remove('user_name');
-                    await prefs.remove('user_email');
+                    // مسح شامل لكل بيانات الكاش لمنع تداخل الجلسات وظهور بيانات أي مستخدم آخر
+                    await prefs.clear(); 
 
                     if (context.mounted) {
                       Navigator.pushAndRemoveUntil(

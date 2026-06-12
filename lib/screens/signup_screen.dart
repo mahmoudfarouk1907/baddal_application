@@ -1,6 +1,8 @@
+// lib/screens/signup_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'otp_screen.dart'; // استدعاء شاشة الـ OTP اللي عملناها
+import 'otp_screen.dart'; // استدعاء شاشة الـ OTP بنجاح
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -26,26 +28,45 @@ class _SignupScreenState extends State<SignupScreen> {
     super.dispose();
   }
 
-  // دالة التحقق من رقم الهاتف المصري
+  // 1️⃣ دالة التحقق الإلزامية والصارمة من رقم الهاتف المصري (ممنوع التسجيل بدونه)
   String? _validatePhoneNumber(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'يرجى إدخال رقم الهاتف';
+    String phone = (value ?? '').trim();
+    if (phone.isEmpty) {
+      return 'رقم الهاتف إجباري لإنشاء الحساب وتفعيل الـ OTP';
     }
-    final regExp = RegExp(r'^01[0125][0-9]{8}$');
-    if (!regExp.hasMatch(value)) {
-      return 'رقم هاتف مصري غير صحيح (يجب أن يبدأ بـ 010, 011, 012, 015)';
+    final regExp = RegExp(r'^01[0125]\d{8}$');
+    if (!regExp.hasMatch(phone)) {
+      return 'رقم هاتف مصري غير صحيح (يجب أن يبدأ بـ 010, 011, 012, 015 ويتكون من 11 رقم)';
     }
     return null;
   }
 
-  // دالة التحقق من الإيميل
+  // 2️⃣ دالة التحقق الذكية من الإيميل (اختياري، لكن لو اتكتب لازم صيغته تكون صح)
   String? _validateEmail(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'يرجى إدخال البريد الإلكتروني';
+    String email = (value ?? '').trim();
+    if (email.isEmpty) {
+      return null; // مسموح بتركه فارغاً بناءً على طلبك 🎯
     }
     final regExp = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-    if (!regExp.hasMatch(value)) {
-      return 'صيغة البريد الإلكتروني غير صحيحة';
+    if (!regExp.hasMatch(email)) {
+      return 'صيغة البريد الإلكتروني غير صحيحة (يجب أن يكون بالإنجليزية)';
+    }
+    return null;
+  }
+
+  // 3️⃣ دالة التحقق من كلمة المرور (تمنع الحروف العربية نهائياً وتتحقق من الطول)
+  String? _validatePassword(String? value) {
+    String pass = value ?? '';
+    if (pass.isEmpty) {
+      return 'يرجى تعيين كلمة مرور لحماية حسابك';
+    }
+    if (pass.length < 6) {
+      return 'كلمة المرور ضعيفة (يجب ألا تقل عن 6 أحرف أو أرقام)';
+    }
+    // منع الحروف العربية تماماً ومطابقة شروط صفحة الـ Login
+    final arabicRegex = RegExp(r'[\u0600-\u06FF]');
+    if (arabicRegex.hasMatch(pass)) {
+      return 'كلمة المرور يجب أن تكون بالإنجليزية أو الأرقام/الرموز فقط وممنوع العربي';
     }
     return null;
   }
@@ -90,24 +111,24 @@ class _SignupScreenState extends State<SignupScreen> {
                   TextFormField(
                     controller: _nameController,
                     style: const TextStyle(color: navyBlue, fontWeight: FontWeight.w600),
-                    validator: (value) => value == null || value.isEmpty ? 'يرجى إدخال الاسم الكامل' : null,
+                    validator: (value) => value == null || value.trim().isEmpty ? 'يرجى إدخال الاسم الكامل' : null,
                     decoration: _buildInputDecoration(Icons.person_outline, 'أدخل اسمك بالكامل', navyBlue),
                   ),
                   const SizedBox(height: 18),
 
-                  // حقل البريد الإلكتروني
-                  _buildFieldLabel('البريد الإلكتروني'),
+                  // hقل البريد الإلكتروني (اختياري للمسجلين الجدد)
+                  _buildFieldLabel('البريد الإلكتروني (اختياري)'),
                   TextFormField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     style: const TextStyle(color: navyBlue, fontWeight: FontWeight.w600),
-                    validator: _validateEmail,
-                    decoration: _buildInputDecoration(Icons.email_outlined, 'email@example.com', navyBlue),
+                    validator: _validateEmail, 
+                    decoration: _buildInputDecoration(Icons.email_outlined, 'email@example.com (يمكن تركه فارغاً)', navyBlue),
                   ),
                   const SizedBox(height: 18),
 
-                  // حقل رقم الهاتف المضبط لمصر
-                  _buildFieldLabel('رقم الهاتف المصري'),
+                  // حقل رقم الهاتف المضبط لمصر (إجباري صارم)
+                  _buildFieldLabel('رقم الهاتف المصري (تفعيل الـ OTP)'),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -127,7 +148,7 @@ class _SignupScreenState extends State<SignupScreen> {
                           controller: _phoneController,
                           keyboardType: TextInputType.phone,
                           maxLength: 11,
-                          validator: _validatePhoneNumber,
+                          validator: _validatePhoneNumber, 
                           style: const TextStyle(color: navyBlue, fontWeight: FontWeight.w600, fontSize: 17, letterSpacing: 1.2),
                           inputFormatters: [
                             FilteringTextInputFormatter.digitsOnly,
@@ -147,28 +168,30 @@ class _SignupScreenState extends State<SignupScreen> {
                     controller: _passwordController,
                     obscureText: true,
                     style: const TextStyle(color: navyBlue, fontWeight: FontWeight.w600),
-                    validator: (value) => value == null || value.length < 6 ? 'كلمة المرور يجب ألا تقل عن 6 أحرف' : null,
+                    validator: _validatePassword, 
                     decoration: _buildInputDecoration(Icons.lock_outline, '••••••••', navyBlue),
                   ),
                   
                   const SizedBox(height: 35),
                   
-                  // زر إنشاء الحساب المربوط بالـ Validation والـ OTP الذكي
+                  // زر إنشاء الحساب المحدث لتمرير الداتا كاملة وبشكل ديناميكي لشاشة الـ OTP
                   SizedBox(
                     width: double.infinity,
                     height: 55,
                     child: ElevatedButton(
                       onPressed: () {
                         if (_formKey.currentState!.validate()) {
-                          // إرسال المستخدم لصفحة الـ OTP مع تمرير الموبايل كأولوية أو الإيميل
-                          String otpDestination = _phoneController.text.isNotEmpty 
-                              ? _phoneController.text 
-                              : _emailController.text;
-
+                          FocusScope.of(context).unfocus();
+                          
+                          // تمرير البيانات الحقيقية التي أدخلها المستخدم لمنع البيانات الوهمية في البروفايل
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => OtpScreen(destination: otpDestination),
+                              builder: (context) => OtpScreen(
+                                phone: _phoneController.text.trim(),
+                                name: _nameController.text.trim(),
+                                email: _emailController.text.trim(),
+                              ),
                             ),
                           );
                         }

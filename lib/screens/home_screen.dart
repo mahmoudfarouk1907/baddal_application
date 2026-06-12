@@ -27,9 +27,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   late Animation<double> _pulseAnimation;
   final bool _hasActiveOrder = true;
 
-  String _userName = "محمود فاروق";
-  String _userEmail = "mahmoudfarouk@gmail.com";
-  String _userRole = "user"; // 🔑 متغير جديد لحفظ صلاحية المستخدم الحالي
+  // المتغيرات تبدأ بقيم فارغة ويتم تعبئتها حياً من الكاش لعدم تداخل الحسابات
+  String _userName = "";
+  String _userEmail = "";
+  String _userPhone = "";
+  String _userRole = "user"; 
 
   @override
   void initState() {
@@ -46,13 +48,14 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
 
-  // 🔄 الفانكشن المحدثة لجلب الاسم والإيميل والـ Role معاً
+  // 🔄 الفانكشن المحدثة بجلب البيانات الحقيقية بأمان تام
   Future<void> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _userName = prefs.getString('user_name') ?? "محمود فاروق";
-      _userEmail = prefs.getString('user_email') ?? "mahmoudfarouk@gmail.com";
-      _userRole = prefs.getString('user_role') ?? "user"; // جلب الصلاحية (main_admin, cash_admin, user)
+      _userName = prefs.getString('user_name') ?? "مستخدم بدّال";
+      _userEmail = prefs.getString('user_email') ?? "";
+      _userPhone = prefs.getString('user_phone') ?? "";
+      _userRole = prefs.getString('user_role') ?? "user"; 
     });
   }
 
@@ -213,7 +216,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
 
-  // 🚪 بناء الـ Drawer مع إخفاء زرار الأدمن تماماً عن اليوزرز العاديين
+  // 🚪 بناء الـ Drawer النظيف والمربوط بالبيانات الحقيقية بالملي
   Widget _buildDrawer(BuildContext context) {
     return Drawer(
       backgroundColor: Colors.white,
@@ -224,7 +227,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             UserAccountsDrawerHeader(
               decoration: const BoxDecoration(color: primaryGreen), 
               accountName: Text(_userName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white)), 
-              accountEmail: Text(_userEmail, style: const TextStyle(color: Colors.white60)), 
+              // إذا لم يتوفر البريد الإلكتروني (تسجيل برقم هاتف فقط) نعرض رقم الهاتف لمنع تداخل نصوص وهمية
+              accountEmail: Text(_userEmail.isNotEmpty ? _userEmail : _userPhone, style: const TextStyle(color: Colors.white60)), 
               currentAccountPicture: const CircleAvatar(
                 backgroundColor: Colors.white,
                 child: Icon(Icons.person, color: primaryGreen, size: 45),
@@ -233,8 +237,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             _buildDrawerItem(icon: Icons.location_searching_rounded, title: "تتبع طلبي الحالي", onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => const ActiveOrderTrackingScreen())); }),
             _buildDrawerItem(icon: Icons.headset_mic_rounded, title: "الدعم الفني والشكاوى", onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => const SupportComplaintsScreen())); }),
             
-            // 🔒 تعديل أمني: الزرار الأحمر والفاصل لن يظهرا إلا إذا كان الحساب "main_admin" فقط
-            if (_userRole == 'main_admin') ...[
+            // 🔒 قفل أمني: لوحة التحكم تظهر فقط للأدمن المعتمد وبناءً على الصلاحية والإيميل الموحد "ad@g.com"
+            if (_userRole == 'main_admin' || _userEmail == "ad@g.com") ...[
               const Divider(color: Colors.grey, thickness: 0.5),
               _buildDrawerItem(
                 icon: Icons.admin_panel_settings_rounded, 

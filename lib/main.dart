@@ -15,14 +15,16 @@ void main() async {
   final prefs = await SharedPreferences.getInstance();
   final bool seenOnboarding = prefs.getBool('seen_onboarding') ?? false;
   final String? userRole = prefs.getString('user_role'); // كابتن أو يوزر
+  final String? userEmail = prefs.getString('user_email'); // 👈 قرأنا الإيميل هنا للتأكد من وجود تسجيل دخول فعلي
 
-  runApp(MyApp(seenOnboarding: seenOnboarding, userRole: userRole));
+  runApp(MyApp(seenOnboarding: seenOnboarding, userRole: userRole, userEmail: userEmail));
 }
 
 class MyApp extends StatelessWidget {
   final bool seenOnboarding;
   final String? userRole;
-  const MyApp({super.key, required this.seenOnboarding, this.userRole});
+  final String? userEmail; // 👈 مررنا الإيميل للـ Widget
+  const MyApp({super.key, required this.seenOnboarding, this.userRole, this.userEmail});
 
   @override
   Widget build(BuildContext context) {
@@ -37,10 +39,13 @@ class MyApp extends StatelessWidget {
       // 2. لو شاف الـ Onboarding ودخل كـ كابتن، يروح للـ Layout المجمع الجديد (الطلبات والمحفظة والبروفايل)
       if (userRole == 'captain') return const CaptainMainLayout(); 
       
-      // 3. لو دخل كـ مستخدم عادي (User)، يروح لشاشات اليوزر
-      if (userRole == 'user') return const MainLayout();
+      // 3. 🚨 التعديل الرسمي للتفنيش:
+      // مستحيل يدخل لشاشات اليوزر (MainLayout) إلا لو كان الرول يوزر وكمان الإيميل بتاعه متسجل فعلياً
+      if (userRole == 'user' && (userEmail?.isNotEmpty ?? false)) {
+        return const MainLayout();
+      }
       
-      // 4. لو مفيش أي داتا متسجلة خالص (null)، يروح لشاشة اللوج إن أو اختيار الحساب مباشرة
+      // 4. لو مفيش أي رول متسجل أو اليوزر مش عامل تسجيل دخول حقيقي (null)، يروح لشاشة اللوج إن مباشرة 🔐
       return const LoginScreen(); 
     }
 

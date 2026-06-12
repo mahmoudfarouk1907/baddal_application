@@ -19,6 +19,7 @@ dependencies:
   
   # ضفنا مكتبة التواصل والاتصال هنا 👇
   url_launcher: ^6.3.0
+  image_picker: ^1.2.1
 
 dev_dependencies:
   flutter_test:

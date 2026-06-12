@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'login_screen.dart'; // عشان ينقلنا لصفحة اللوج إن لما نخلص
-import 'main_layout.dart'; // عشان ينقلنا للصفحة الرئيسية لما نضغط تخطي
+import 'main_layout.dart'; // عشان ينقلنا للصفحة الرئيسية لما نضغط 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
 
@@ -34,7 +34,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // زر التخطي (Skip)
+            // زر ال (Skip)
             Align(
               alignment: Alignment.topRight,
               child: TextButton(
@@ -44,7 +44,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     MaterialPageRoute(builder: (_) => const MainLayout()),
                   );
                 },
-                child: const Text("تخطي", style: TextStyle(color: Colors.green, fontSize: 16)),
+                child: const Text("", style: TextStyle(color: Colors.green, fontSize: 16)),
               ),
             ),
             

@@ -4,13 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart'; 
 import 'signup_screen.dart';
-import 'otp_screen.dart'; 
 import 'main_layout.dart';
 import 'captain_orders_screen.dart'; 
 
-// ⬇️ استيراد لوحات التحكم الصحيحة والمطابقة لملفات مشروعك الحالية
+// استيراد لوحات التحكم الصحيحة والمطابقة لملفات مشروعك الحالية
 import 'admin_deposits_dashboard.dart';
-import 'admin_panel_screen.dart'; // الملف الصحيح من شجرة ملفاتك 🎯
+import 'admin_panel_screen.dart'; 
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -18,8 +17,6 @@ class LoginScreen extends StatefulWidget {
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
-
-class _ProfileScreenState {} // فئة فارغة لتجنب أي مشاكل في الترتيب (إن وجدت)
 
 class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
@@ -35,16 +32,62 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  // 1️⃣ فاليديشن حقل الإيميل (صارم ومقتصر على الحسابات الثلاثة المسموحة حالياً)
+  String? _validateEmailOrUsername(String? value) {
+    String email = (value ?? '').trim().toLowerCase();
+    String phone = _phoneController.text.trim();
+
+    if (email.isEmpty && phone.isEmpty) {
+      return 'يرجى إدخال البريد الإلكتروني أو رقم الهاتف بالأسفل';
+    }
+
+    if (email.isNotEmpty) {
+      final emailRegex = RegExp(r'^[a-zA-Z0-9.]+@[a-zA-Z0-9]+\.[a-zA-Z]+');
+      if (!emailRegex.hasMatch(email)) {
+        return 'صيغة البريد الإلكتروني غير صحيحة';
+      }
+      
+      // حظر الدخول بأي إيميل خارج الثلاثة المعتمدين للإدارة والكابتن لحين ربط الـ API
+      if (email != "ad@g.com" && email != "adcash@g.com" && email != "cap@gmail.com") {
+        return 'عذراً، هذا البريد الإلكتروني غير مسجل حالياً بالنظام';
+      }
+    }
+    return null;
+  }
+
+  // 2️⃣ فاليديشن رقم الهاتف (مصري صارم يمنع أي أرقام أو شبكات وهمية)
   String? _validatePhoneNumber(String? value) {
-    if (_emailController.text.isNotEmpty && (value == null || value.isEmpty)) {
-      return null; 
+    String phone = (value ?? '').trim();
+    String email = _emailController.text.trim();
+
+    // لو المستخدم كاتب إيميل الإدارة الصحيح، يبقى الهاتف مش إجباري في الفاليديشن
+    if (email.isNotEmpty) return null;
+
+    if (phone.isEmpty) {
+      return 'يرجى إدخال رقم الهاتف المكون من 11 رقم';
     }
-    if (value == null || value.isEmpty) {
-      return 'يرجى إدخال رقم الهاتف أو البريد الإلكتروني';
+    
+    // الفحص الصارم: يجب البدء بـ 01 ثم (0 أو 1 أو 2 أو 5) يليهم 8 أرقام تماماً بدون أي زيادات
+    final phoneRegex = RegExp(r'^01[0125]\d{8}$');
+    if (!phoneRegex.hasMatch(phone)) {
+      return 'يجب أن يبدأ بـ 010 أو 011 أو 012 أو 015 ويتكون من 11 رقم بالظبط';
     }
-    final regExp = RegExp(r'^01[0125][0-9]{8}$');
-    if (!regExp.hasMatch(value)) {
-      return 'رقم هاتف غير صحيح (يجب أن يبدأ بـ 010, 011, 012, 015)';
+    return null;
+  }
+
+  // 3️⃣ فاليديشن كلمة المرور (تمنع العربي وتتحقق من الطول والرموز)
+  String? _validatePassword(String? value) {
+    String pass = value ?? '';
+    if (pass.isEmpty) {
+      return 'كلمة المرور إجبارية لتسجيل الدخول';
+    }
+    if (pass.length < 6) {
+      return 'كلمة المرور يجب ألا تقل عن 6 أحرف أو أرقام';
+    }
+    // منع الحروف العربية تماماً (تقبل حروف إنجليزية، أرقام، رموز)
+    final arabicRegex = RegExp(r'[\u0600-\u06FF]');
+    if (arabicRegex.hasMatch(pass)) {
+      return 'كلمة المرور يجب أن تكون بالإنجليزية أو الأرقام/الرموز فقط وممنوع العربي';
     }
     return null;
   }
@@ -74,9 +117,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   Text('مرحباً بك مجدداً في baddal', style: TextStyle(color: textHighContrast, fontSize: 15, fontWeight: FontWeight.w500)),
                   const SizedBox(height: 35),
 
-                  _buildFieldLabel('البريد الإلكتروني أو اسم المستخدم'),
+                  _buildFieldLabel('البريد الإلكتروني أو اسم المستخدم (للإدارة والكابتن)'),
                   TextFormField(
                     controller: _emailController,
+                    validator: _validateEmailOrUsername, 
                     style: const TextStyle(color: navyBlue, fontWeight: FontWeight.w600),
                     textAlign: TextAlign.right,
                     keyboardType: TextInputType.emailAddress,
@@ -96,6 +140,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   TextFormField(
                     controller: _passwordController,
+                    validator: _validatePassword, 
                     obscureText: true,
                     style: const TextStyle(color: navyBlue, fontWeight: FontWeight.w600),
                     textAlign: TextAlign.right,
@@ -103,7 +148,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   
                   const SizedBox(height: 25),
-                  Text('أو عبر رقم الهاتف المصري', style: TextStyle(color: textHighContrast, fontSize: 14, fontWeight: FontWeight.bold)),
+                  Text('أو عبر رقم الهاتف المصري (للمستخدمين)', style: TextStyle(color: textHighContrast, fontSize: 14, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 15),
 
                   Row(
@@ -123,7 +168,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           maxLength: 11,
                           validator: _validatePhoneNumber,
                           style: const TextStyle(color: navyBlue, fontWeight: FontWeight.w600, fontSize: 17, letterSpacing: 1.2),
-                          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                          inputFormatters: [FilteringTextInputFormatter.digitsOnly], 
                           decoration: _buildInputDecoration(null, '01x xxxx xxxx', navyBlue).copyWith(counterText: ""),
                         ),
                       ),
@@ -140,52 +185,57 @@ class _LoginScreenState extends State<LoginScreen> {
                         if (_formKey.currentState!.validate()) {
                           final prefs = await SharedPreferences.getInstance();
                           
-                          // تنظيف كامل للبيانات القديمة لبدء جلسة نظيفة بحساب الصلاحية الصحيح
-                          await prefs.remove('user_role');
-                          await prefs.remove('user_name');
-                          await prefs.remove('user_email');
+                          // مسح أمني شامل قبل تخزين بيانات الجلسة الجديدة
+                          await prefs.clear(); 
                           
                           String email = _emailController.text.trim().toLowerCase();
+                          String phone = _phoneController.text.trim();
 
-                          // 👑 فحص وتوجيه الأدمن الرئيسي للنظام إلى صفحة الأدمن الصحيحة بالمشروع
+                          // 👑 1. الأدمن الرئيسي
                           if (email == "ad@g.com") {
                             await prefs.setString('user_role', 'main_admin');
-                            await prefs.setString('user_email', 'ad@g.com');
+                            await prefs.setString('user_email', email); // تخزين الإيميل المطابق للحساب المفتوح
                             await prefs.setString('user_name', 'الأدمن الرئيسي');
+                            await prefs.setBool('is_logged_in', true);
                             
                             if (mounted) {
                               Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const AdminPanelScreen()));
                             }
                           }
-                          // 💵 فحص وتوجيه أدمن مراجعة الكاش والمحفظة
+                          // 💵 2. أدمن مراجعة الكاش
                           else if (email == "adcash@g.com") {
                             await prefs.setString('user_role', 'cash_admin');
-                            await prefs.setString('user_email', 'adcash@g.com');
+                            await prefs.setString('user_email', email); // تخزين الإيميل المطابق
                             await prefs.setString('user_name', 'أدمن الخزنة والكاش');
+                            await prefs.setBool('is_logged_in', true);
                             
                             if (mounted) {
                               Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const AdminDepositsDashboard()));
                             }
                           }
-                          // 🏍️ فحص وتوجيه حساب الكابتن المعتاد
+                          // 🏍️ 3. حساب الكابتن
                           else if (email == "cap@gmail.com") {
                             await prefs.setString('user_role', 'captain');
-                            await prefs.setString('user_email', 'cap@gmail.com');
+                            await prefs.setString('user_email', email); // تخزين الإيميل المطابق
                             await prefs.setString('user_name', 'كابتن مصطفى نصر');
+                            await prefs.setBool('is_logged_in', true);
                             
                             if (mounted) {
                               Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const CaptainMainLayout()));
                             }
                           } 
-                          // 👤 أي بريد إلكتروني آخر يسجل دخول كعميل/مستخدم عادي
-                          else {
+                          // 👤 4. مستخدم عادي (برقم الهاتف)
+                          else if (phone.isNotEmpty) {
                             await prefs.setString('user_role', 'user');
-                            await prefs.setString('user_email', email);
+                            await prefs.setString('user_phone', phone);
+                            // حماية الكاش: تصفير حقل الإيميل لليوزر العادي عشان الـ Profile والـ Drawer يعرضوا داتا صحيحة وفارغة
+                            await prefs.setString('user_email', ''); 
+                            await prefs.setBool('is_logged_in', true);
                             
-                            if (email == "mahmoudfarouk@gmail.com") {
+                            if (phone == "01141168861") {
                               await prefs.setString('user_name', 'محمود فاروق');
                             } else {
-                              await prefs.setString('user_name', 'مستخدم جديد');
+                              await prefs.setString('user_name', 'مستخدم بدّال');
                             }
 
                             if (mounted) {

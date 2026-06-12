@@ -1,11 +1,21 @@
+// lib/screens/otp_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'main_layout.dart'; // الإمبورت الجديد للحاضن الأساسي بالـ Nav Bar
 
 class OtpScreen extends StatefulWidget {
-  final String destination; // تستقبل الرقم أو الإيميل ديناميكياً
+  final String phone;
+  final String name;
+  final String email;
 
-  const OtpScreen({super.key, required this.destination});
+  const OtpScreen({
+    super.key, 
+    required this.phone, 
+    required this.name, 
+    required this.email,
+  });
 
   @override
   State<OtpScreen> createState() => _OtpScreenState();
@@ -55,13 +65,13 @@ class _OtpScreenState extends State<OtpScreen> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'تم إرسال كود التفعيل المكون من 4 أرقام إلى:\n${widget.destination}',
+                    'تم إرسال كود التفعيل المكون من 4 أرقام إلى:\n${widget.phone}',
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 15, color: navyBlue.withValues(alpha: 0.7), fontWeight: FontWeight.w600, height: 1.5),
                   ),
                   const SizedBox(height: 40),
 
-                  // مربعات إدخال الـ OTP الـ 4 المتجاوبة
+                  // مربعات إدخال الـ OTP الـ 4 المتجاوبة كما هي تماماً
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: List.generate(4, (index) {
@@ -102,23 +112,50 @@ class _OtpScreenState extends State<OtpScreen> {
                   ),
                   const SizedBox(height: 40),
 
-                  // زر التحقق والتأكيد النهائى المتصل بالـ MainLayout
+                  // زر التحقق والتأكيد النهائى الذكي
                   SizedBox(
                     width: double.infinity,
                     height: 55,
                     child: ElevatedButton(
-                      onPressed: () {
-                        bool isComplete = _controllers.every((c) => c.text.isNotEmpty);
+                      onPressed: () async {
+                        bool isComplete = _controllers.every((c) => c.text.trim().isNotEmpty);
                         if (isComplete) {
-                          // تصفير كل الصفحات القديمة والانتقال للـ MainLayout مباشرة لمنع اختفاء الـ Nav Bar
-                          Navigator.pushAndRemoveUntil(
-                            context,
-                            MaterialPageRoute(builder: (context) => const MainLayout()),
-                            (route) => false,
-                          );
+                          final prefs = await SharedPreferences.getInstance();
+                          
+                          // 🔑 حفظ الاسم والرقم الجديد الممررين للشاشة فوراً في الكاش
+                          await prefs.setString('user_name', widget.name);
+                          await prefs.setString('user_phone', widget.phone);
+                          if (widget.email.isNotEmpty) {
+                            await prefs.setString('user_email', widget.email);
+                          }
+
+                          if (mounted) {
+                            // التحقق من أين جاء المستخدم؟
+                            // لو الحساب متسيف كأدمن من البداية، أو الإيميل معتمد، أو كان مسجل دخول أصلاً
+                            String? currentRole = prefs.getString('user_role');
+                            
+                            if (currentRole != null) {
+                              // 🟢 يوزر قديم بيعدل رقمه فقط -> يرجع للبروفايل فوراً يشوف النتيجة
+                              Navigator.pop(context);
+                            } else {
+                              // 🔵 يوزر جديد لسه بيسجل لأول مرة -> نثبت الـ Role ونوديه للرئيسية
+                              await prefs.setString('user_role', 'user');
+                              if (widget.email.isEmpty) {
+                                await prefs.setString('user_email', 'لم يتم ربط بريد إلكتروني');
+                              }
+                              
+                              if (mounted) {
+                                Navigator.pushAndRemoveUntil(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const MainLayout()),
+                                  (route) => false,
+                                );
+                              }
+                            }
+                          }
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('يرجى ملء جميع خانات رمز التحقق أولاً', style: TextStyle(fontWeight: FontWeight.bold))),
+                            const SnackBar(content: Text('يرجى ملء جميع خانات رمز التحقق أولاً', style: TextStyle(fontWeight: FontWeight.bold)), backgroundColor: Colors.red),
                           );
                         }
                       },
@@ -127,7 +164,7 @@ class _OtpScreenState extends State<OtpScreen> {
                         elevation: 0,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
-                      child: const Text('تأكيد والذهاب للرئيسية', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                      child: const Text('تأكيد وتفعيل الحساب', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -135,7 +172,7 @@ class _OtpScreenState extends State<OtpScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text('لم يصلك الرمز؟ ', style: TextStyle(color: navyBlue.withValues(alpha: 0.7), fontWeight: FontWeight.w500)),
+                      Text('لم يصلك الرمز? ', style: TextStyle(color: navyBlue.withValues(alpha: 0.7), fontWeight: FontWeight.w500)),
                       TextButton(
                         onPressed: () {
                           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم إعادة إرسال الرمز بنجاح')));

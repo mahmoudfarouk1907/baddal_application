@@ -1,5 +1,10 @@
+// edit_profile_screen.dart
+
+import 'dart:io';
 import 'package:flutter/material.dart';
-// إستيراد صفحة الـ OTP القديمة الخاصة بك (تأكد من كتابة المسار الصحيح للملف عندك)
+import 'package:flutter/services.dart'; // 🔢 إمبورت أساسي للتحكم في مدخلات الكيبورد والـ Formatters
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:image_picker/image_picker.dart'; // 📸 مكتبة اختيار الصور
 import 'otp_screen.dart'; 
 
 class EditProfileScreen extends StatefulWidget {
@@ -10,13 +15,126 @@ class EditProfileScreen extends StatefulWidget {
 }
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
-  final _nameController = TextEditingController(text: "أحمد محمد");
-  final _phoneController = TextEditingController(text: "01012345678");
+  final _nameController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
-  // ألوان ثابتة وصريحة لأعلى تباين بصري (High Contrast)
-  static const Color navyBlue = Color(0xFF0F172A); // كحلي داكن جداً وواضح
+  String? _imagePath; // 🔑 متغير لحفظ مسار الصورة الشخصية المختار حياً
+  final ImagePicker _picker = ImagePicker();
+
+  static const Color navyBlue = Color(0xFF0F172A); 
   static const Color primaryGreen = Color(0xFF22C55E);
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCurrentUserData(); // 🔄 جلب بيانات المستخدم الحقيقية فور فتح الشاشة
+  }
+
+  // 🔄 دالة جلب البيانات الحالية من الـ SharedPreferences
+  Future<void> _loadCurrentUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _nameController.text = prefs.getString('user_name') ?? "";
+      _phoneController.text = prefs.getString('user_phone') ?? "";
+      _imagePath = prefs.getString('user_image'); // جلب مسار الصورة لو موجود
+    });
+  }
+
+  // 📸 دالة اختيار صورة شخصية من استوديو الهاتف
+  Future<void> _pickImage() async {
+    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _imagePath = pickedFile.path;
+      });
+    }
+  }
+
+  // 💾 1. دالة حفظ الاسم والصورة الشخصية فقط (بدون OTP)
+  Future<void> _saveNameAndProfilePicture() async {
+    if (_nameController.text.trim().isEmpty) {
+      _showCustomSnackBar("تنبيه", "برجاء إدخال اسم صحيح", Colors.orange);
+      return;
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('user_name', _nameController.text.trim());
+    if (_imagePath != null) {
+      await prefs.setString('user_image', _imagePath!);
+    }
+
+    if (mounted) {
+      _showCustomSnackBar("عملية ناجحة", "تم حفظ الاسم والصورة الشخصية بنجاح.", primaryGreen);
+    }
+  }
+
+  // 🔒 2. دالة التحقق والانتقال لصفحة الـ OTP لتغيير الرقم
+  void _verifyAndGoToOTP() async {
+    if (_formKey.currentState!.validate()) {
+      // Intentional Navigation to OTP Screen with user input
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => OtpScreen(
+            name: _nameController.text,
+            phone: _phoneController.text,
+            email: '',
+          ),
+        ),
+      );
+
+      // فور العودة بنجاح نقوم بتحديث البيانات المعروضة في الشاشة من الكاش الجديد
+      _loadCurrentUserData();
+      if (mounted) {
+        _showCustomSnackBar("عملية ناجحة", "تمت عملية التحقق وتحديث رقم الهاتف بنجاح.", primaryGreen);
+      }
+    }
+  }
+
+  // ميثود موحدة لإظهار الـ SnackBar الاحترافي الخاص بك باللون المختار
+  void _showCustomSnackBar(String title, String message, Color backgroundColor) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Container(
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+          child: Row(
+            children: [
+              Icon(
+                title == "عملية ناجحة" ? Icons.check_circle_rounded : Icons.info_rounded, 
+                color: Colors.white, 
+                size: 26,
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(fontWeight: FontWeight.w900, color: Colors.white, fontSize: 15),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      message,
+                      style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xE6FFFFFF), fontSize: 13),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        backgroundColor: backgroundColor,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        elevation: 4,
+        duration: const Duration(seconds: 4),
+      ),
+    );
+  }
 
   @override
   void dispose() {
@@ -25,77 +143,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     super.dispose();
   }
 
-  // ميثود الانتقال للـ OTP مع انتظار النتيجة وإظهار الرسالة بتصميمها الجديد
-  void _verifyAndGoToOTP() async {
-    if (_formKey.currentState!.validate()) {
-      // الانتظار حتى يعود المستخدم من صفحة الـ OTP
-      await Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const OtpScreen(destination: '/profile'),
-        ),
-      );
-
-      // إظهار الـ SnackBar الاحترافي الجديد فور العودة
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Container(
-              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-              child: const Row(
-                children: [
-                  Icon(
-                    Icons.check_circle_rounded, 
-                    color: Colors.white, 
-                    size: 26,
-                  ),
-                  SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "عملية ناجحة",
-                          style: TextStyle(
-                            fontWeight: FontWeight.w900, 
-                            color: Colors.white,
-                            fontSize: 15,
-                          ),
-                        ),
-                        SizedBox(height: 2),
-                        Text(
-                          "تم حفظ البيانات وتغيير الرقم بنجاح.",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold, 
-                            color: Color(0xE6FFFFFF),
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            backgroundColor: primaryGreen,
-            behavior: SnackBarBehavior.floating, // تطفو بشكل مودرن فوق العناصر
-            margin: const EdgeInsets.all(16), // أبعاد احترافية عن الحواف
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16), // حواف دائرية ناعمة
-            ),
-            elevation: 4,
-            duration: const Duration(seconds: 4),
-          ),
-        );
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC), // خلفية بيضاء صريحة ونظيفة
+      backgroundColor: const Color(0xFFF8FAFC), 
       appBar: AppBar(
         title: const Text(
           "تعديل البيانات الشخصية", 
@@ -118,18 +169,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // --- قسم تعديل الصورة ---
+                // --- قسم تعديل الصورة الشخصية الحية ---
                 Center(
                   child: GestureDetector(
-                    onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("جاري فتح الاستوديو لرفع صورة..."))
-                    ),
+                    onTap: _pickImage, // عند الضغط يفتح الاستوديو فوراً
                     child: Stack(
                       children: [
                         CircleAvatar(
                           radius: 50, 
                           backgroundColor: Colors.grey.shade200, 
-                          child: const Icon(Icons.person, size: 50, color: Colors.grey)
+                          backgroundImage: _imagePath != null ? FileImage(File(_imagePath!)) : null,
+                          child: _imagePath == null 
+                              ? const Icon(Icons.person, size: 50, color: Colors.grey)
+                              : null,
                         ),
                         const Positioned(
                           bottom: 0, 
@@ -160,39 +212,80 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   validator: (v) => (v == null || v.trim().isEmpty) ? "الاسم مطلوب" : null,
                   decoration: _inputDecoration(Icons.person_outline_rounded, "أدخل الاسم بالكامل"),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
 
-                // --- حقل رقم الموبيل ---
+                // 💾 زر حفظ الاسم والصورة الشخصية فقط (باللون الأخضر)
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryGreen, 
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), 
+                      elevation: 0
+                    ),
+                    onPressed: _saveNameAndProfilePicture,
+                    icon: const Icon(Icons.save_rounded, color: Colors.white),
+                    label: const Text(
+                      "حفظ الاسم والصورة الشخصية", 
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)
+                    ),
+                  ),
+                ),
+                
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 20),
+                  child: Divider(color: Colors.grey, thickness: 0.5),
+                ),
+
+                // --- حقل رقم الموبيل الجديد والمطور بالأمان الكامل ---
                 const Padding(
                   padding: EdgeInsets.only(bottom: 8, right: 4),
                   child: Text(
-                    "رقم الموبيل", 
+                    "رقم الموبيل الجديد", 
                     style: TextStyle(fontWeight: FontWeight.bold, color: navyBlue, fontSize: 16)
                   ),
                 ),
                 TextFormField(
                   controller: _phoneController,
                   keyboardType: TextInputType.phone,
+                  maxLength: 11, // 🛑 قفل كامل: يمنع كتابة أكتر من 11 رقم في الخانة
                   style: const TextStyle(fontWeight: FontWeight.bold, color: navyBlue, fontSize: 16),
-                  validator: (v) => (v == null || v.length < 11) ? "أدخل رقم هاتف صحيح مكون من 11 رقم" : null,
-                  decoration: _inputDecoration(Icons.phone_android_rounded, "01xxxxxxxxx"),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly, // 🔢 يسمح بالأرقام فقط ويمنع الرموز أو الحروف
+                  ],
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) {
+                      return "رقم الموبيل مطلوب";
+                    }
+                    // 🔍 فحص دقيق لطول الرقم (11 رقم بالظبط) والتحقق من بدايات الشبكات المصرية
+                    final regExp = RegExp(r'^01[0125][0-9]{8}$');
+                    if (!regExp.hasMatch(v.trim())) {
+                      return "أدخل رقم هاتف مصري صحيح مكون من 11 رقم";
+                    }
+                    return null;
+                  },
+                  decoration: _inputDecoration(Icons.phone_android_rounded, "01xxxxxxxxx").copyWith(
+                    counterText: "", // 👁️ إخفاء العداد التلقائي للحفاظ على جمال الديزاين
+                  ),
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: 20),
 
-                // --- زر حفظ التعديلات والانتقال للـ OTP ---
+                // 🔒 زر لتأكيد الرقم الجديد عبر الـ OTP منفصل تماماً
                 SizedBox(
                   width: double.infinity,
                   height: 55,
-                  child: ElevatedButton(
+                  child: ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryGreen, 
+                      backgroundColor: navyBlue, 
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), 
                       elevation: 0
                     ),
                     onPressed: _verifyAndGoToOTP,
-                    child: const Text(
-                      "حفظ وتأكيد عبر رمز OTP", 
-                      style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.white)
+                    icon: const Icon(Icons.lock_outline_rounded, color: Colors.white),
+                    label: const Text(
+                      "تغيير الرقم وتأكيد عبر رمز OTP", 
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)
                     ),
                   ),
                 ),
@@ -204,7 +297,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
-  // ميثود الديكورشن لثبات تباين الحقول والخطوط لضعاف النظر
   InputDecoration _inputDecoration(IconData icon, String hintText) {
     return InputDecoration(
       prefixIcon: Icon(icon, color: primaryGreen, size: 22),
@@ -215,7 +307,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       errorStyle: const TextStyle(fontWeight: FontWeight.bold, color: Colors.red, fontSize: 13),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12), 
-        borderSide: BorderSide(color: Colors.grey.shade400, width: 1.6) // حدود بارزة
+        borderSide: BorderSide(color: Colors.grey.shade400, width: 1.6)
       ), 
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12), 
@@ -234,5 +326,5 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 }
 
 class PlatformColors {
-  static const FontWeight boldFont = FontWeight.w800; // خط عريض جداً ومثالي للـ AppBar
+  static const FontWeight boldFont = FontWeight.w800; 
 }

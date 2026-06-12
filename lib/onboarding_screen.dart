@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:baddal_application/screens/login_screen.dart';
+
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
 
@@ -11,14 +13,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
-  // دالة لحفظ أن المستخدم شاف الشاشات دي وم تظهرش تاني
   Future<void> _completeOnboarding() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('seen_onboarding', true);
     
     if (mounted) {
-      // Use named route to avoid depending on a specific class name in login_screen.dart
-      Navigator.pushReplacementNamed(context, '/login');
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+      );
     }
   }
 
@@ -32,19 +35,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // زر التخطي (Skip) في الأعلى
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: TextButton(
-                onPressed: _completeOnboarding,
-                child: const Text(
-                  'تخطي',
-                  style: TextStyle(color: Colors.grey, fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ),
+            const SizedBox(height: 40), // مسافة علوية نظيفة بديلة للزرار
 
-            // الصفحات الثلاثة مدمجة مع حركة السحب
+            // الصفحات الثلاثة
             Expanded(
               child: PageView(
                 controller: _pageController,
@@ -54,21 +47,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   });
                 },
                 children: [
-                  // الصفحة الأولى: اللوجو والكلمة السحرية
                   _buildPage(
-                    imagePath: 'assets/baddal.green.logo.png', // حط الصورة في فولدر الـ assets عندك
+                    imagePath: 'assets/baddal.green.logo.png',
                     title: 'Baddal | بدّال',
                     subtitle: '“مش فاضي بدّال بدالك”',
                     isFirstPage: true,
                   ),
-                  // الصفحة الثانية: شرح الخدمة الأولى
                   _buildPage(
-                    imagePath: 'assets/baddal.green.logo.png', // تقدر تغيرها لصور توضيحية بعدين
+                    imagePath: 'assets/baddal.green.logo.png',
                     title: 'توصيل سريع وذكي',
                     subtitle: 'بنربطك بأقرب كابتن في أجا والدقهلية عشان طلباتك تلمس باب بيتك في دقائق معدودة وبأمان كامل.',
                     isFirstPage: false,
                   ),
-                  // الصفحة الثالثة: شرح الخدمة الثانية (حجز العيادات والأسعار المتغيرة)
                   _buildPage(
                     imagePath: 'assets/baddal.green.logo.png',
                     title: 'مشاويرك الطبية أسهل',
@@ -85,7 +75,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // المؤشرات (Dots)
                   Row(
                     children: List.generate(
                       3,
@@ -102,7 +91,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                   ),
 
-                  // زر التالي أو ابدأ الآن
                   ElevatedButton(
                     onPressed: () {
                       if (_currentPage == 2) {
@@ -133,7 +121,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  // ويدجت مخصصة لبناء تصميم كل صفحة بشكل نظيف وموحد
   Widget _buildPage({required String imagePath, required String title, required String subtitle, required bool isFirstPage}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 32.0),
