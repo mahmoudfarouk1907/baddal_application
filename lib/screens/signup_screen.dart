@@ -28,28 +28,28 @@ class _SignupScreenState extends State<SignupScreen> {
     super.dispose();
   }
 
-  // 1️⃣ دالة التحقق الإلزامية والصارمة من رقم الهاتف المصري (ممنوع التسجيل بدونه)
-  String? _validatePhoneNumber(String? value) {
-    String phone = (value ?? '').trim();
-    if (phone.isEmpty) {
-      return 'رقم الهاتف إجباري لإنشاء الحساب وتفعيل الـ OTP';
-    }
-    final regExp = RegExp(r'^01[0125]\d{8}$');
-    if (!regExp.hasMatch(phone)) {
-      return 'رقم هاتف مصري غير صحيح (يجب أن يبدأ بـ 010, 011, 012, 015 ويتكون من 11 رقم)';
-    }
-    return null;
-  }
-
-  // 2️⃣ دالة التحقق الذكية من الإيميل (اختياري، لكن لو اتكتب لازم صيغته تكون صح)
+  // 1️⃣ دالة التحقق الصارمة من البريد الإلكتروني (أصبح إجباري لتفعيل الـ OTP المجاني)
   String? _validateEmail(String? value) {
     String email = (value ?? '').trim();
     if (email.isEmpty) {
-      return null; // مسموح بتركه فارغاً بناءً على طلبك 🎯
+      return 'البريد الإلكتروني إجباري لإنشاء الحساب وتفعيل الـ OTP';
     }
     final regExp = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
     if (!regExp.hasMatch(email)) {
       return 'صيغة البريد الإلكتروني غير صحيحة (يجب أن يكون بالإنجليزية)';
+    }
+    return null;
+  }
+
+  // 2️⃣ دالة التحقق الذكية من رقم الهاتف (أصبح اختياري، لكن لو اتكتب لازم يكون 11 رقم مصري صح)
+  String? _validatePhoneNumber(String? value) {
+    String phone = (value ?? '').trim();
+    if (phone.isEmpty) {
+      return null; // مسموح بتركه فارغاً بناءً على طلبك الجديد 🎯
+    }
+    final regExp = RegExp(r'^01[0125]\d{8}$');
+    if (!regExp.hasMatch(phone)) {
+      return 'رقم هاتف مصري غير صحيح (يجب أن يبدأ بـ 010, 011, 012, 015 ويتكون من 11 رقم)';
     }
     return null;
   }
@@ -116,49 +116,31 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
                   const SizedBox(height: 18),
 
-                  // hقل البريد الإلكتروني (اختياري للمسجلين الجدد)
-                  _buildFieldLabel('البريد الإلكتروني (اختياري)'),
+                  // حقل البريد الإلكتروني (إجباري للـ OTP المجاني)
+                  _buildFieldLabel('البريد الإلكتروني (تفعيل الـ OTP)'),
                   TextFormField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     style: const TextStyle(color: navyBlue, fontWeight: FontWeight.w600),
                     validator: _validateEmail, 
-                    decoration: _buildInputDecoration(Icons.email_outlined, 'email@example.com (يمكن تركه فارغاً)', navyBlue),
+                    decoration: _buildInputDecoration(Icons.email_outlined, 'email@example.com', navyBlue),
                   ),
                   const SizedBox(height: 18),
 
-                  // حقل رقم الهاتف المضبط لمصر (إجباري صارم)
-                  _buildFieldLabel('رقم الهاتف المصري (تفعيل الـ OTP)'),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        margin: const EdgeInsets.only(top: 2),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.grey[400]!),
-                        ),
-                        child: const Text('EG +20', style: TextStyle(fontWeight: FontWeight.bold, color: navyBlue, fontSize: 15)),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: TextFormField(
-                          controller: _phoneController,
-                          keyboardType: TextInputType.phone,
-                          maxLength: 11,
-                          validator: _validatePhoneNumber, 
-                          style: const TextStyle(color: navyBlue, fontWeight: FontWeight.w600, fontSize: 17, letterSpacing: 1.2),
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                          ],
-                          decoration: _buildInputDecoration(null, '01x xxxx xxxx', navyBlue).copyWith(
-                            counterText: "",
-                          ),
-                        ),
-                      ),
+                  // حقل رقم الهاتف (اختياري وبدون تعقيد كود الدولة)
+                  _buildFieldLabel('رقم الهاتف المحمول (اختياري)'),
+                  TextFormField(
+                    controller: _phoneController,
+                    keyboardType: TextInputType.phone,
+                    maxLength: 11,
+                    validator: _validatePhoneNumber, 
+                    style: const TextStyle(color: navyBlue, fontWeight: FontWeight.w600, fontSize: 16),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
                     ],
+                    decoration: _buildInputDecoration(Icons.phone_android_rounded, '01xxxxxxxxx (يمكن تركه فارغاً)', navyBlue).copyWith(
+                      counterText: "",
+                    ),
                   ),
                   const SizedBox(height: 18),
 
@@ -183,7 +165,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         if (_formKey.currentState!.validate()) {
                           FocusScope.of(context).unfocus();
                           
-                          // تمرير البيانات الحقيقية التي أدخلها المستخدم لمنع البيانات الوهمية في البروفايل
+                          // تمرير البيانات الحقيقية التي أدخلها المستخدم شاشة الـ OTP عبر الإيميل
                           Navigator.push(
                             context,
                             MaterialPageRoute(

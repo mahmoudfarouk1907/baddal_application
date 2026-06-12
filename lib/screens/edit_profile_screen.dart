@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // 🔢 إمبورت أساسي للتحكم في مدخلات الكيبورد والـ Formatters
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart'; // 📸 مكتبة اختيار الصور
-import 'otp_screen.dart'; 
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -51,43 +50,25 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
   }
 
-  // 💾 1. دالة حفظ الاسم والصورة الشخصية فقط (بدون OTP)
-  Future<void> _saveNameAndProfilePicture() async {
-    if (_nameController.text.trim().isEmpty) {
-      _showCustomSnackBar("تنبيه", "برجاء إدخال اسم صحيح", Colors.orange);
-      return;
-    }
-
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('user_name', _nameController.text.trim());
-    if (_imagePath != null) {
-      await prefs.setString('user_image', _imagePath!);
-    }
-
-    if (mounted) {
-      _showCustomSnackBar("عملية ناجحة", "تم حفظ الاسم والصورة الشخصية بنجاح.", primaryGreen);
-    }
-  }
-
-  // 🔒 2. دالة التحقق والانتقال لصفحة الـ OTP لتغيير الرقم
-  void _verifyAndGoToOTP() async {
+  // 💾 دالة حفظ كافة البيانات (الاسم، الصورة، ورقم الهاتف) مباشرة في الكاش بدون OTP
+  Future<void> _saveProfileData() async {
     if (_formKey.currentState!.validate()) {
-      // Intentional Navigation to OTP Screen with user input
-      await Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => OtpScreen(
-            name: _nameController.text,
-            phone: _phoneController.text,
-            email: '',
-          ),
-        ),
-      );
+      final prefs = await SharedPreferences.getInstance();
+      
+      // حفظ البيانات مباشرة
+      await prefs.setString('user_name', _nameController.text.trim());
+      await prefs.setString('user_phone', _phoneController.text.trim());
+      
+      if (_imagePath != null) {
+        await prefs.setString('user_image', _imagePath!);
+      }
 
-      // فور العودة بنجاح نقوم بتحديث البيانات المعروضة في الشاشة من الكاش الجديد
-      _loadCurrentUserData();
       if (mounted) {
-        _showCustomSnackBar("عملية ناجحة", "تمت عملية التحقق وتحديث رقم الهاتف بنجاح.", primaryGreen);
+        _showCustomSnackBar("عملية ناجحة", "تم تحديث وحفظ بيانات الملف الشخصي بنجاح.", primaryGreen);
+        // إغلاق الشاشة والرجوع بعد الحفظ المباشر ليرى المستخدم النتيجة في البروفايل
+        Future.delayed(const Duration(seconds: 1), () {
+          if (mounted) Navigator.pop(context);
+        });
       }
     }
   }
@@ -131,7 +112,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         margin: const EdgeInsets.all(16),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         elevation: 4,
-        duration: const Duration(seconds: 4),
+        duration: const Duration(seconds: 3),
       ),
     );
   }
@@ -212,37 +193,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   validator: (v) => (v == null || v.trim().isEmpty) ? "الاسم مطلوب" : null,
                   decoration: _inputDecoration(Icons.person_outline_rounded, "أدخل الاسم بالكامل"),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 24),
 
-                // 💾 زر حفظ الاسم والصورة الشخصية فقط (باللون الأخضر)
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryGreen, 
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), 
-                      elevation: 0
-                    ),
-                    onPressed: _saveNameAndProfilePicture,
-                    icon: const Icon(Icons.save_rounded, color: Colors.white),
-                    label: const Text(
-                      "حفظ الاسم والصورة الشخصية", 
-                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)
-                    ),
-                  ),
-                ),
-                
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 20),
-                  child: Divider(color: Colors.grey, thickness: 0.5),
-                ),
-
-                // --- حقل رقم الموبيل الجديد والمطور بالأمان الكامل ---
+                // --- حقل رقم الموبيل ---
                 const Padding(
                   padding: EdgeInsets.only(bottom: 8, right: 4),
                   child: Text(
-                    "رقم الموبيل الجديد", 
+                    "رقم الموبيل", 
                     style: TextStyle(fontWeight: FontWeight.bold, color: navyBlue, fontSize: 16)
                   ),
                 ),
@@ -269,23 +226,23 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     counterText: "", // 👁️ إخفاء العداد التلقائي للحفاظ على جمال الديزاين
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 40),
 
-                // 🔒 زر لتأكيد الرقم الجديد عبر الـ OTP منفصل تماماً
+                // 💾 زر حفظ التعديلات النهائي الذكي والمباشر (باللون الأخضر المعتمد)
                 SizedBox(
                   width: double.infinity,
                   height: 55,
                   child: ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: navyBlue, 
+                      backgroundColor: primaryGreen, 
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), 
                       elevation: 0
                     ),
-                    onPressed: _verifyAndGoToOTP,
-                    icon: const Icon(Icons.lock_outline_rounded, color: Colors.white),
+                    onPressed: _saveProfileData,
+                    icon: const Icon(Icons.check_circle_outline_rounded, color: Colors.white),
                     label: const Text(
-                      "تغيير الرقم وتأكيد عبر رمز OTP", 
-                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)
+                      "حفظ وتحديث البيانات الشخصية", 
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)
                     ),
                   ),
                 ),

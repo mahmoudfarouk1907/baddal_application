@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'main_layout.dart'; // الإمبورت الجديد للحاضن الأساسي بالـ Nav Bar
+import 'main_layout.dart'; // الإمبورت للحاضن الأساسي بالـ Nav Bar
 
 class OtpScreen extends StatefulWidget {
   final String phone;
@@ -65,13 +65,13 @@ class _OtpScreenState extends State<OtpScreen> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'تم إرسال كود التفعيل المكون من 4 أرقام إلى:\n${widget.phone}',
+                    'تم إرسال كود التفعيل المكون من 4 أرقام إلى بريدك الإلكتروني:\n${widget.email}',
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 15, color: navyBlue.withValues(alpha: 0.7), fontWeight: FontWeight.w600, height: 1.5),
                   ),
                   const SizedBox(height: 40),
 
-                  // مربعات إدخال الـ OTP الـ 4 المتجاوبة كما هي تماماً
+                  // مربعات إدخال الـ OTP الـ 4 المتجاوبة
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: List.generate(4, (index) {
@@ -112,7 +112,7 @@ class _OtpScreenState extends State<OtpScreen> {
                   ),
                   const SizedBox(height: 40),
 
-                  // زر التحقق والتأكيد النهائى الذكي
+                  // زر التحقق والتأكيد النهائي الذكي
                   SizedBox(
                     width: double.infinity,
                     height: 55,
@@ -122,27 +122,26 @@ class _OtpScreenState extends State<OtpScreen> {
                         if (isComplete) {
                           final prefs = await SharedPreferences.getInstance();
                           
-                          // 🔑 حفظ الاسم والرقم الجديد الممررين للشاشة فوراً في الكاش
+                          // 🔑 حفظ بيانات المستخدم الجديدة فوراً في الكاش
                           await prefs.setString('user_name', widget.name);
-                          await prefs.setString('user_phone', widget.phone);
+                          await prefs.setString('user_phone', widget.phone.isNotEmpty ? widget.phone : 'لا يوجد رقم هاتف');
+                          
                           if (widget.email.isNotEmpty) {
                             await prefs.setString('user_email', widget.email);
+                          } else {
+                            await prefs.setString('user_email', 'لم يتم ربط بريد إلكتروني');
                           }
 
                           if (mounted) {
-                            // التحقق من أين جاء المستخدم؟
-                            // لو الحساب متسيف كأدمن من البداية، أو الإيميل معتمد، أو كان مسجل دخول أصلاً
                             String? currentRole = prefs.getString('user_role');
                             
                             if (currentRole != null) {
-                              // 🟢 يوزر قديم بيعدل رقمه فقط -> يرجع للبروفايل فوراً يشوف النتيجة
+                              // 🟢 يوزر قديم بيعدل داتا أو بيأكد خطوة -> يرجع للخلف فوراً
                               Navigator.pop(context);
                             } else {
-                              // 🔵 يوزر جديد لسه بيسجل لأول مرة -> نثبت الـ Role ونوديه للرئيسية
+                              // 🔵 يوزر جديد لسه بيسجل لأول مرة -> نثبت الـ Role ونثبت تسجيل الدخول ونوديه للرئيسية
                               await prefs.setString('user_role', 'user');
-                              if (widget.email.isEmpty) {
-                                await prefs.setString('user_email', 'لم يتم ربط بريد إلكتروني');
-                              }
+                              await prefs.setBool('is_logged_in', true);
                               
                               if (mounted) {
                                 Navigator.pushAndRemoveUntil(
@@ -172,7 +171,7 @@ class _OtpScreenState extends State<OtpScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text('لم يصلك الرمز? ', style: TextStyle(color: navyBlue.withValues(alpha: 0.7), fontWeight: FontWeight.w500)),
+                      Text('لم يصلك الرمز؟ ', style: TextStyle(color: navyBlue.withValues(alpha: 0.7), fontWeight: FontWeight.w500)),
                       TextButton(
                         onPressed: () {
                           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم إعادة إرسال الرمز بنجاح')));
