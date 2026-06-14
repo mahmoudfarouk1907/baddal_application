@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // 🚨 تم إضافة الاستدعاء لقراءة حالة الإلغاء
 import 'captain_active_order_screen.dart';
 import 'captain_wallet_screen.dart';
-import 'captain_profile_screen.dart'; // الاسم الصح اللي اتفقنا عليه لعدم اللخبطة
+import 'captain_profile_screen.dart'; 
 import 'captain_notifications_screen.dart';
 
 class CaptainMainLayout extends StatefulWidget {
@@ -77,8 +78,8 @@ class _AvailableOrdersScreenState extends State<AvailableOrdersScreen> {
   static const Color primaryGreen = Color(0xFF22C55E);
   static const Color backgroundColor = Color(0xFFF8FAFC);
 
-  // هنا السر والحل المالي: السعر بقى double مش String نصوص 🚀
-  final List<Map<String, dynamic>> _availableOrders = [
+  // قائمة الطلبات المتاحة الأساسية
+  List<Map<String, dynamic>> _availableOrders = [
     {
       "orderId": "#B991",
       "pickup": "صيدلية د. أحمد - شارع الجمهورية",
@@ -94,6 +95,25 @@ class _AvailableOrdersScreenState extends State<AvailableOrdersScreen> {
       "type": "normal", 
     },
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _checkCancelledOrders(); // 🔄 فحص الطلبات الملغية فور فتح الشاشة
+  }
+
+  // 🔄 فانكشن أمنية لفحص الكاش وتحديث القائمة لو العميل كنسل الطلب
+  Future<void> _checkCancelledOrders() async {
+    final prefs = await SharedPreferences.getInstance();
+    final orderStatus = prefs.getString('active_order_status');
+    
+    if (orderStatus == 'cancelled') {
+      setState(() {
+        // لو الطلب اتكنسل، بنشيل الأوردرات النشطة فوراً من واجهة الكابتن
+        _availableOrders = []; 
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -114,7 +134,7 @@ class _AvailableOrdersScreenState extends State<AvailableOrdersScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const CaptainNotificationsScreen()),
-              );
+              ).then((_) => _checkCancelledOrders()); // إعادة الفحص عند الرجوع للشاشة
             },
           ),
           const SizedBox(width: 8),
@@ -135,7 +155,14 @@ class _AvailableOrdersScreenState extends State<AvailableOrdersScreen> {
       ),
       body: Directionality(
         textDirection: TextDirection.rtl,
-        child: ListView.builder(
+        child: _availableOrders.isEmpty 
+        ? const Center(
+            child: Text(
+              "لا توجد طلبات متاحة حالياً",
+              style: TextStyle(color: navyBlue, fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          )
+        : ListView.builder(
           padding: const EdgeInsets.all(16),
           itemCount: _availableOrders.length,
           itemBuilder: (context, index) {
@@ -155,7 +182,6 @@ class _AvailableOrdersScreenState extends State<AvailableOrdersScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(order["orderId"], style: const TextStyle(color: navyBlue, fontWeight: FontWeight.bold)),
-                      // بنعرض كلمة جنيه هنا بس في التصميم بدون ما نلخبط الكود المالي
                       Text("${order["price"].toStringAsFixed(0)} جنيه", style: const TextStyle(color: primaryGreen, fontWeight: FontWeight.w900, fontSize: 18)),
                     ],
                   ),
@@ -184,10 +210,10 @@ class _AvailableOrdersScreenState extends State<AvailableOrdersScreen> {
                             builder: (context) => CaptainActiveOrderScreen(
                               orderId: order["orderId"],
                               orderType: order["type"],
-                              orderPrice: order["price"], // هتباصي رقم double نضيف وصحيح
+                              orderPrice: order["price"], 
                             ),
                           ),
-                        );
+                        ).then((_) => _checkCancelledOrders()); // إعادة الفحص عند العودة من شاشة الأوردر النشط
                       },
                       child: const Text("قبول الطلب وبدء المشوار 🚀", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                     ),

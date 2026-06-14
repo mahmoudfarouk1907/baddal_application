@@ -25,9 +25,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
-  final bool _hasActiveOrder = true;
+  
+  bool _hasActiveOrder = true;
 
-  // المتغيرات تبدأ بقيم فارغة ويتم تعبئتها حياً من الكاش لعدم تداخل الحسابات
   String _userName = "";
   String _userEmail = "";
   String _userPhone = "";
@@ -48,14 +48,21 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
 
-  // 🔄 الفانكشن المحدثة بجلب البيانات الحقيقية بأمان تام
   Future<void> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
+    final orderStatus = prefs.getString('active_order_status');
+    
     setState(() {
       _userName = prefs.getString('user_name') ?? "مستخدم بدّال";
       _userEmail = prefs.getString('user_email') ?? "";
       _userPhone = prefs.getString('user_phone') ?? "";
       _userRole = prefs.getString('user_role') ?? "user"; 
+      
+      if (orderStatus == 'cancelled') {
+        _hasActiveOrder = false;
+      } else {
+        _hasActiveOrder = true; 
+      }
     });
   }
 
@@ -154,11 +161,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         mainAxisSpacing: 16,
                         childAspectRatio: 1.1,
                         children: [
-                          _buildServiceCard(context, title: "طلب كابتن مشاوير", subtitle: "يقضيلك مشوارك الخاص", icon: Icons.directions_bike, color: Colors.orange, onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CaptainRideScreen()))),
-                          _buildServiceCard(context, title: "مشوار حر (متعدد)", subtitle: "طلبات من كذا مكان في رحلة", icon: Icons.add_location_alt_rounded, color: Colors.indigo, onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MultiOrderScreen()))),
-                          _buildServiceCard(context, title: "توصيل طرد أو أمانة", subtitle: "إرسال واستلام أي حاجة", icon: Icons.local_shipping, color: Colors.blue, onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DeliveryPackageScreen()))),
-                          _buildServiceCard(context, title: "طلبات سوبرماركت", subtitle: "نجيبلك طلبات البيت", icon: Icons.shopping_basket, color: Colors.purple, onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SupermarketScreen()))),
-                          _buildServiceCard(context, title: "طلبات الصيدلية", subtitle: "علاجاتك لحد باب بيتك", icon: Icons.local_pharmacy, color: Colors.red, onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PharmacyScreen()))),
+                          _buildServiceCard(context, title: "طلب كابتن مشاوير", subtitle: "يقضيلك مشوارك الخاص", icon: Icons.directions_bike, color: Colors.orange, bgImagePath: "assets/captin.mashawer.png", onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CaptainRideScreen()))),
+                          _buildServiceCard(context, title: "مشوار حر (متعدد)", subtitle: "طلبات من كذا مكان في رحلة", icon: Icons.add_location_alt_rounded, color: Colors.indigo, bgImagePath: "assets/meshwar.motadd.png", onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MultiOrderScreen()))),
+                          _buildServiceCard(context, title: "توصيل طرد أو أمانة", subtitle: "إرسال واستلام أي حاجة", icon: Icons.local_shipping, color: Colors.blue, bgImagePath: "assets/tawsel amanh.png", onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DeliveryPackageScreen()))),
+                          _buildServiceCard(context, title: "طلبات سوبرماركت", subtitle: "نجيبلك طلبات البيت", icon: Icons.shopping_basket, color: Colors.purple, bgImagePath: "assets/supermarket.png", onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SupermarketScreen()))),
+                          _buildServiceCard(context, title: "طلبات الصيدلية", subtitle: "علاجاتك لحد باب بيتك", icon: Icons.local_pharmacy, color: Colors.red, bgImagePath: "assets/saidalia.png", onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PharmacyScreen()))),
                         ],
                       ),
                       const SizedBox(height: 120), 
@@ -196,8 +203,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               ),
             ),
             GestureDetector(
-              onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (_) => const ActiveOrderTrackingScreen()));
+              onTap: () async {
+                await Navigator.push(context, MaterialPageRoute(builder: (_) => const ActiveOrderTrackingScreen()));
+                _loadUserData();
               },
               child: Container(
                 width: 56,
@@ -216,7 +224,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
 
-  // 🚪 بناء الـ Drawer النظيف والمربوط بالبيانات الحقيقية بالملي
   Widget _buildDrawer(BuildContext context) {
     return Drawer(
       backgroundColor: Colors.white,
@@ -227,17 +234,24 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             UserAccountsDrawerHeader(
               decoration: const BoxDecoration(color: primaryGreen), 
               accountName: Text(_userName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white)), 
-              // إذا لم يتوفر البريد الإلكتروني (تسجيل برقم هاتف فقط) نعرض رقم الهاتف لمنع تداخل نصوص وهمية
               accountEmail: Text(_userEmail.isNotEmpty ? _userEmail : _userPhone, style: const TextStyle(color: Colors.white60)), 
               currentAccountPicture: const CircleAvatar(
                 backgroundColor: Colors.white,
                 child: Icon(Icons.person, color: primaryGreen, size: 45),
               ),
             ),
-            _buildDrawerItem(icon: Icons.location_searching_rounded, title: "تتبع طلبي الحالي", onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => const ActiveOrderTrackingScreen())); }),
+            if (_hasActiveOrder)
+              _buildDrawerItem(
+                icon: Icons.location_searching_rounded, 
+                title: "تتبع طلبي الحالي", 
+                onTap: () async { 
+                  Navigator.pop(context); 
+                  await Navigator.push(context, MaterialPageRoute(builder: (_) => const ActiveOrderTrackingScreen())); 
+                  _loadUserData();
+                }
+              ),
             _buildDrawerItem(icon: Icons.headset_mic_rounded, title: "الدعم الفني والشكاوى", onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => const SupportComplaintsScreen())); }),
             
-            // 🔒 قفل أمني: لوحة التحكم تظهر فقط للأدمن المعتمد وبناءً على الصلاحية والإيميل الموحد "ad@g.com"
             if (_userRole == 'main_admin' || _userEmail == "ad@g.com") ...[
               const Divider(color: Colors.grey, thickness: 0.5),
               _buildDrawerItem(
@@ -271,25 +285,71 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
 
-  Widget _buildServiceCard(BuildContext context, {required String title, required String subtitle, required IconData icon, required Color color, required VoidCallback onTap}) {
+  Widget _buildServiceCard(BuildContext context, {
+    required String title, 
+    required String subtitle, 
+    required IconData icon, 
+    required Color color, 
+    required String bgImagePath, 
+    required VoidCallback onTap,
+  }) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), boxShadow: [BoxShadow(color: Colors.grey.withValues(alpha: 0.1), spreadRadius: 1, blurRadius: 6, offset: const Offset(0, 3))]),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          color: Colors.white, 
+          borderRadius: BorderRadius.circular(16), 
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withValues(alpha: 0.1), 
+              spreadRadius: 1, 
+              blurRadius: 6, 
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Stack(
           children: [
-            Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle), child: Icon(icon, size: 30, color: color)),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.black87)),
-                const SizedBox(height: 4),
-                Text(subtitle, style: const TextStyle(fontSize: 11, color: Colors.grey), maxLines: 1, overflow: TextOverflow.ellipsis),
-              ],
+            // 🚨 هنا التعديل الجديد: ظبطنا الأبعاد والمحاذاة عشان تملأ الكرت بالكامل وتكبر بشكل احترافي
+            Positioned(
+              bottom: 0,
+              left: 0,
+              top: 15, // ترك مسافة صغيرة من فوق عشان تبعد عن الأيقونة العلوية
+              child: Opacity(
+                opacity: 0.18, // نسبة الشفافية لضمان وضوح نصوصك
+                child: Image.asset(
+                  bgImagePath,
+                  fit: BoxFit.contain, // يكبر الصورة لأقصى حجم مع الحفاظ على أبعادها من غير مط
+                ),
+              ),
+            ),
+            
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8), 
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.1), 
+                      shape: BoxShape.circle,
+                    ), 
+                    child: Icon(icon, size: 30, color: color),
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.black87)),
+                      const SizedBox(height: 4),
+                      Text(subtitle, style: const TextStyle(fontSize: 11, color: Colors.grey), maxLines: 1, overflow: TextOverflow.ellipsis),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ],
         ),

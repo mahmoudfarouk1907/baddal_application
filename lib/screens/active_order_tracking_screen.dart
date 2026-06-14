@@ -33,6 +33,63 @@ class _ActiveOrderTrackingScreenState extends State<ActiveOrderTrackingScreen> {
     }
   }
 
+  // 🚨 فانكشن إظهار نافذة تأكيد إلغاء الطلب من قِبل المستخدم
+  void _showCancelOrderDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return Directionality(
+          textDirection: TextDirection.rtl,
+          child: AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: const Row(
+              children: [
+                Icon(Icons.warning_amber_rounded, color: Colors.red, size: 28),
+                SizedBox(width: 8),
+                Text('إلغاء الطلب', style: TextStyle(fontWeight: FontWeight.bold, color: navyBlue)),
+              ],
+            ),
+            content: const Text(
+              'هل أنت متأكد من رغبتك في إلغاء هذا الطلب؟ لا يمكن التراجع عن هذا الإجراء.',
+              style: TextStyle(fontSize: 15, height: 1.4, color: Colors.grey, fontWeight: FontWeight.w600),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: const Text('تراجع', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  Navigator.pop(dialogContext); // إغلاق الديالوج
+                  
+                  final prefs = await SharedPreferences.getInstance();
+                  // حفظ حالة الإلغاء في الكاش لتسمع في باقي الشاشات
+                  await prefs.setString('active_order_status', 'cancelled');
+                  
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('تم إلغاء الطلب بنجاح', style: TextStyle(fontWeight: FontWeight.bold)),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                    Navigator.pop(context); // العودة للشاشة السابقة بعد الإلغاء مباشرة
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  elevation: 0,
+                ),
+                child: const Text('نعم، إلغاء', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   // 💡 فانكشن إظهار نافذة التقييم الروقان للعميل
   void _showRatingBottomSheet(BuildContext context) {
     int selectedStars = 5; // القيمة الافتراضية للنجوم
@@ -289,7 +346,27 @@ class _ActiveOrderTrackingScreenState extends State<ActiveOrderTrackingScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 24),
+
+              // 🚨 زرار إلغاء الطلب الحالي المضاف بالتنسيق المظبوط مع التصميم
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: OutlinedButton.icon(
+                  onPressed: () => _showCancelOrderDialog(context),
+                  icon: const Icon(Icons.cancel_outlined, color: Colors.red, size: 20),
+                  label: const Text(
+                    "إلغاء الطلب الحالي",
+                    style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 15),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: Colors.red, width: 1.5),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    backgroundColor: Colors.red.withValues(alpha: 0.02),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
 
               // 💡 زر محاكاة إتمام الطلب من طرف الكابتن لإظهار نافذة التقييم تجريبياً
               SizedBox(

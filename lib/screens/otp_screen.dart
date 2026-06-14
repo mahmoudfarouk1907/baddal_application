@@ -4,17 +4,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'main_layout.dart'; // الإمبورت للحاضن الأساسي بالـ Nav Bar
+import 'captain_orders_screen.dart'; // استدعاء شاشة الكابتن للتوجيه السليم 🚀
 
 class OtpScreen extends StatefulWidget {
   final String phone;
   final String name;
   final String email;
+  final String role; // 👈 استلام الـ role المرر من شاشة الـ Signup
 
   const OtpScreen({
     super.key, 
     required this.phone, 
     required this.name, 
     required this.email,
+    required this.role, // 👈 جعلها بارامتر مطلوب وإجباري
   });
 
   @override
@@ -112,7 +115,7 @@ class _OtpScreenState extends State<OtpScreen> {
                   ),
                   const SizedBox(height: 40),
 
-                  // زر التحقق والتأكيد النهائي الذكي
+                  // زر التحقق والتأكيد النهائي الذكي بعد حل مشكلة الـ Role
                   SizedBox(
                     width: double.infinity,
                     height: 55,
@@ -139,16 +142,25 @@ class _OtpScreenState extends State<OtpScreen> {
                               // 🟢 يوزر قديم بيعدل داتا أو بيأكد خطوة -> يرجع للخلف فوراً
                               Navigator.pop(context);
                             } else {
-                              // 🔵 يوزر جديد لسه بيسجل لأول مرة -> نثبت الـ Role ونثبت تسجيل الدخول ونوديه للرئيسية
-                              await prefs.setString('user_role', 'user');
+                              // 🔵 مستخدم جديد لسه بيسجل لأول مرة -> نثبت الـ Role الحقيقي اللي مبعوت ونثبت تسجيل الدخول ونوجهه صح
+                              await prefs.setString('user_role', widget.role); // 👈 هنا التعديل الذهبي!
                               await prefs.setBool('is_logged_in', true);
                               
                               if (mounted) {
-                                Navigator.pushAndRemoveUntil(
-                                  context,
-                                  MaterialPageRoute(builder: (context) => const MainLayout()),
-                                  (route) => false,
-                                );
+                                // 🎯 فحص ذكي للتوجيه ومنع دخول الكابتن كـ يوزر عادي
+                                if (widget.role == 'captain') {
+                                  Navigator.pushAndRemoveUntil(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => const CaptainMainLayout()),
+                                    (route) => false,
+                                  );
+                                } else {
+                                  Navigator.pushAndRemoveUntil(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => const MainLayout()),
+                                    (route) => false,
+                                  );
+                                }
                               }
                             }
                           }

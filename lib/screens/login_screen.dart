@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart'; 
 import 'signup_screen.dart';
 import 'main_layout.dart';
-import 'captain_orders_screen.dart'; 
+import 'captain_orders_screen.dart'; // الحاضن أو الشاشة الخاصة بالكابتن
 
 // استيراد لوحات التحكم الصحيحة والمطابقة لملفات مشروعك الحالية
 import 'admin_deposits_dashboard.dart';
@@ -21,6 +21,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  bool _isLoading = false; // لمؤشر التحميل عند ضرب الـ API
 
   @override
   void dispose() {
@@ -54,12 +55,82 @@ class _LoginScreenState extends State<LoginScreen> {
     if (pass.length < 6) {
       return 'كلمة المرور يجب ألا تقل عن 6 أحرف أو أرقام';
     }
-    // منع الحروف العربية تماماً (تقبل حروف إنجليزية، أرقام، رموز)
     final arabicRegex = RegExp(r'[\u0600-\u06FF]');
     if (arabicRegex.hasMatch(pass)) {
       return 'كلمة المرور يجب أن تكون بالإنجليزية أو الأرقام/الرموز فقط وممنوع العربي';
     }
     return null;
+  }
+
+  // 🌐 3️⃣ دالة تسجيل الدخول والربط مع الـ API (جاهزة للربط الفوري)
+  Future<void> _handleLogin() async {
+    FocusScope.of(context).unfocus();
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isLoading = true);
+    final prefs = await SharedPreferences.getInstance();
+    
+    // مسح أمني شامل قبل تخزين بيانات الجلسة الجديدة
+    await prefs.clear(); 
+
+    String email = _emailController.text.trim().toLowerCase();
+    String password = _passwordController.text;
+
+    try {
+      // -------------------------------------------------------------
+      // 💡 مكان ربط الـ API الخاص بك مستقبلاً:
+      // final response = await myApi.login(email: email, password: password);
+      // String serverRole = response.data['role']; // كابتن أو يوزر عادي
+      // String token = response.data['token'];
+      // String userName = response.data['name'];
+      // String userPhone = response.data['phone'] ?? '';
+      // -------------------------------------------------------------
+
+      // 🧪 بيئة الاختبار الحالية وتوجيه الأدوار الذكي (Demo Accounts)
+      if (email == "ad@g.com") {
+        await _saveSession(prefs, role: 'main_admin', email: email, name: 'الأدمن الرئيسي');
+        if (mounted) Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const AdminPanelScreen()));
+      } 
+      else if (email == "adcash@g.com") {
+        await _saveSession(prefs, role: 'cash_admin', email: email, name: 'أدمن الخزنة والكاش');
+        if (mounted) Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const AdminDepositsDashboard()));
+      } 
+      else if (email == "cap@gmail.com") {
+        // حساب الكابتن التجريبي الثابت
+        await _saveSession(prefs, role: 'captain', email: email, name: 'كابتن مصطفى نصر', phone: '01012345678');
+        if (mounted) Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const CaptainMainLayout()));
+      } 
+      else {
+        // السلوك الديناميكي: هنا نقدر نفرق بناءً على الداتا المرتجعة من السيرفر
+        // كمثال للاختبار الحالي: لو الإيميل بيحتوي على كلمة "captain" هيعتبره كابتن، غير كده يوزر عادي
+        if (email.contains("captain")) {
+          await _saveSession(prefs, role: 'captain', email: email, name: 'كابتن بدّال الجديد', phone: '01199998888');
+          if (mounted) Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const CaptainMainLayout()));
+        } else {
+          await _saveSession(prefs, role: 'user', email: email, name: 'مستخدم بدّال');
+          if (mounted) Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const MainLayout()));
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('حدث خطأ أثناء تسجيل الدخول: $e'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  // دالة مساعدة لتخزين الجلسة لتجنب تكرار الكود
+  Future<void> _saveSession(SharedPreferences prefs, {required String role, required String email, required String name, String phone = ''}) async {
+    await prefs.setString('user_role', role);
+    await prefs.setString('user_email', email);
+    await prefs.setString('user_name', name);
+    if (phone.isNotEmpty) {
+      await prefs.setString('user_phone', phone);
+    }
+    await prefs.setBool('is_logged_in', true);
   }
 
   @override
@@ -73,137 +144,83 @@ class _LoginScreenState extends State<LoginScreen> {
       body: Directionality(
         textDirection: TextDirection.rtl,
         child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                children: [
-                  const SizedBox(height: 40),
-                  const Text('baddal', style: TextStyle(fontSize: 35, fontWeight: FontWeight.bold, color: primaryGreen)),
-                  const SizedBox(height: 30),
-                  const Text('تسجيل الدخول', style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: navyBlue)),
-                  const SizedBox(height: 8),
-                  Text('مرحباً بك مجدداً في baddal', style: TextStyle(color: textHighContrast, fontSize: 15, fontWeight: FontWeight.w500)),
-                  const SizedBox(height: 40),
+          child: PlatformDetails.isBusy(_isLoading)
+              ? const Center(child: CircularProgressIndicator(color: primaryGreen))
+              : SingleChildScrollView(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 40),
+                        const Text('baddal', style: TextStyle(fontSize: 35, fontWeight: FontWeight.bold, color: primaryGreen)),
+                        const SizedBox(height: 30),
+                        const Text('تسجيل الدخول', style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: navyBlue)),
+                        const SizedBox(height: 8),
+                        Text('مرحباً بك مجدداً في baddal', style: TextStyle(color: textHighContrast, fontSize: 15, fontWeight: FontWeight.w500)),
+                        const SizedBox(height: 40),
 
-                  _buildFieldLabel('البريد الإلكتروني'),
-                  TextFormField(
-                    controller: _emailController,
-                    validator: _validateEmail, 
-                    style: const TextStyle(color: navyBlue, fontWeight: FontWeight.w600),
-                    textAlign: TextAlign.right,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: _buildInputDecoration(Icons.email_outlined, 'example@baddal.com', navyBlue),
-                  ),
-                  const SizedBox(height: 20),
+                        _buildFieldLabel('البريد الإلكتروني'),
+                        TextFormField(
+                          controller: _emailController,
+                          validator: _validateEmail, 
+                          style: const TextStyle(color: navyBlue, fontWeight: FontWeight.w600),
+                          textAlign: TextAlign.right,
+                          keyboardType: TextInputType.emailAddress,
+                          decoration: _buildInputDecoration(Icons.email_outlined, 'example@baddal.com', navyBlue),
+                        ),
+                        const SizedBox(height: 20),
 
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _buildFieldLabel('كلمة المرور'),
-                      TextButton(
-                        onPressed: () {},
-                        child: const Text('نسيت كلمة المرور؟', style: TextStyle(color: primaryGreen, fontSize: 13, fontWeight: FontWeight.bold)),
-                      ),
-                    ],
-                  ),
-                  TextFormField(
-                    controller: _passwordController,
-                    validator: _validatePassword, 
-                    obscureText: true,
-                    style: const TextStyle(color: navyBlue, fontWeight: FontWeight.w600),
-                    textAlign: TextAlign.right,
-                    decoration: _buildInputDecoration(Icons.lock_outline, '••••••••', navyBlue),
-                  ),
-                  
-                  const SizedBox(height: 45),
-                  
-                  SizedBox(
-                    width: double.infinity,
-                    height: 55,
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        FocusScope.of(context).unfocus();
-                        if (_formKey.currentState!.validate()) {
-                          final prefs = await SharedPreferences.getInstance();
-                          
-                          // مسح أمني شامل قبل تخزين بيانات الجلسة الجديدة
-                          await prefs.clear(); 
-                          
-                          String email = _emailController.text.trim().toLowerCase();
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            _buildFieldLabel('كلمة المرور'),
+                            TextButton(
+                              onPressed: () {},
+                              child: const Text('نسيت كلمة المرور؟', style: TextStyle(color: primaryGreen, fontSize: 13, fontWeight: FontWeight.bold)),
+                            ),
+                          ],
+                        ),
+                        TextFormField(
+                          controller: _passwordController,
+                          validator: _validatePassword, 
+                          obscureText: true,
+                          style: const TextStyle(color: navyBlue, fontWeight: FontWeight.w600),
+                          textAlign: TextAlign.right,
+                          decoration: _buildInputDecoration(Icons.lock_outline, '••••••••', navyBlue),
+                        ),
+                        
+                        const SizedBox(height: 45),
+                        
+                        SizedBox(
+                          width: double.infinity,
+                          height: 55,
+                          child: ElevatedButton(
+                            onPressed: _handleLogin,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: primaryGreen, 
+                              elevation: 0, 
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                            child: const Text('دخول', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                          ),
+                        ),
 
-                          // 👑 1. الأدمن الرئيسي
-                          if (email == "ad@g.com") {
-                            await prefs.setString('user_role', 'main_admin');
-                            await prefs.setString('user_email', email);
-                            await prefs.setString('user_name', 'الأدمن الرئيسي');
-                            await prefs.setBool('is_logged_in', true);
-                            
-                            if (mounted) {
-                              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const AdminPanelScreen()));
-                            }
-                          }
-                          // 💵 2. أدمن مراجعة الكاش
-                          else if (email == "adcash@g.com") {
-                            await prefs.setString('user_role', 'cash_admin');
-                            await prefs.setString('user_email', email);
-                            await prefs.setString('user_name', 'أدمن الخزنة والكاش');
-                            await prefs.setBool('is_logged_in', true);
-                            
-                            if (mounted) {
-                              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const AdminDepositsDashboard()));
-                            }
-                          }
-                          // 🏍️ 3. حساب الكابتن
-                          else if (email == "cap@gmail.com") {
-                            await prefs.setString('user_role', 'captain');
-                            await prefs.setString('user_email', email);
-                            await prefs.setString('user_name', 'كابتن مصطفى نصر');
-                            await prefs.setBool('is_logged_in', true);
-                            
-                            if (mounted) {
-                              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const CaptainMainLayout()));
-                            }
-                          } 
-                          // 👤 4. مستخدم عادي (يسجل بأي إيميل بره حسابات الإدارة)
-                          else {
-                            await prefs.setString('user_role', 'user');
-                            await prefs.setString('user_email', email);
-                            // بنخزن اسم افتراضي للمستخدم لحد ما يغيره من بروفايله
-                            await prefs.setString('user_name', 'مستخدم بدّال');
-                            await prefs.setBool('is_logged_in', true);
-                            
-                            if (mounted) {
-                              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const MainLayout()));
-                            }
-                          }
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryGreen, 
-                        elevation: 0, 
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                      child: const Text('دخول', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                        const SizedBox(height: 40),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text('ليس لديك حساب؟ ', style: TextStyle(color: textHighContrast, fontWeight: FontWeight.w500)),
+                            TextButton(
+                              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SignupScreen())),
+                              child: const Text('إنشاء حساب جديد', style: TextStyle(color: primaryGreen, fontWeight: FontWeight.bold, fontSize: 15)),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
-
-                  const SizedBox(height: 40),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text('ليس لديك حساب؟ ', style: TextStyle(color: textHighContrast, fontWeight: FontWeight.w500)),
-                      TextButton(
-                        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SignupScreen())),
-                        child: const Text('إنشاء حساب جديد', style: TextStyle(color: primaryGreen, fontWeight: FontWeight.bold, fontSize: 15)),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
+                ),
         ),
       ),
     );
@@ -234,4 +251,8 @@ class _LoginScreenState extends State<LoginScreen> {
       focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.red, width: 2)),
     );
   }
+}
+
+class PlatformDetails {
+  static bool isBusy(bool state) => state;
 }

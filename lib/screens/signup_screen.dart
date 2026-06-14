@@ -11,7 +11,7 @@ class SignupScreen extends StatefulWidget {
   State<SignupScreen> createState() => _SignupScreenState();
 }
 
-class _SignupScreenState extends State<SignupScreen> {
+class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   
   final _nameController = TextEditingController();
@@ -19,16 +19,32 @@ class _SignupScreenState extends State<SignupScreen> {
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
 
+  late TabController _tabController;
+  String _currentRole = 'user'; // الدور الافتراضي عند فتح الشاشة
+
+  @override
+  void initState() {
+    super.initState();
+    // تظبيط الـ TabController للتبديل بين اليوزر والكابتن
+    _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(() {
+      setState(() {
+        _currentRole = _tabController.index == 0 ? 'user' : 'captain';
+      });
+    });
+  }
+
   @override
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
     _passwordController.dispose();
+    _tabController.dispose();
     super.dispose();
   }
 
-  // 1️⃣ دالة التحقق الصارمة من البريد الإلكتروني (أصبح إجباري لتفعيل الـ OTP المجاني)
+  // 1️⃣ دالة التحقق الصارمة من البريد الإلكتروني (إجباري لتفعيل الـ OTP المجاني للطرفين)
   String? _validateEmail(String? value) {
     String email = (value ?? '').trim();
     if (email.isEmpty) {
@@ -41,12 +57,21 @@ class _SignupScreenState extends State<SignupScreen> {
     return null;
   }
 
-  // 2️⃣ دالة التحقق الذكية من رقم الهاتف (أصبح اختياري، لكن لو اتكتب لازم يكون 11 رقم مصري صح)
+  // 2️⃣ دالة التحقق الذكية من رقم الهاتف (اختياري لليوزر، وإجباري وصارم جداً للكابتن)
   String? _validatePhoneNumber(String? value) {
     String phone = (value ?? '').trim();
-    if (phone.isEmpty) {
-      return null; // مسموح بتركه فارغاً بناءً على طلبك الجديد 🎯
+    
+    // لو يوزر عادي وساب الحقل فاضي ⬅️ تمام مفيش مشكلة
+    if (_currentRole == 'user' && phone.isEmpty) {
+      return null; 
     }
+    
+    // لو كابتن وساب الحقل فاضي ⬅️ ممنوع تماماً
+    if (_currentRole == 'captain' && phone.isEmpty) {
+      return 'رقم الهاتف إجباري للكابتن للتواصل والاتصال عبر الواتساب';
+    }
+
+    // الفحص الصارم للرقم المصري للطرفين في حال إدخاله
     final regExp = RegExp(r'^01[0125]\d{8}$');
     if (!regExp.hasMatch(phone)) {
       return 'رقم هاتف مصري غير صحيح (يجب أن يبدأ بـ 010, 011, 012, 015 ويتكون من 11 رقم)';
@@ -63,7 +88,6 @@ class _SignupScreenState extends State<SignupScreen> {
     if (pass.length < 6) {
       return 'كلمة المرور ضعيفة (يجب ألا تقل عن 6 أحرف أو أرقام)';
     }
-    // منع الحروف العربية تماماً ومطابقة شروط صفحة الـ Login
     final arabicRegex = RegExp(r'[\u0600-\u06FF]');
     if (arabicRegex.hasMatch(pass)) {
       return 'كلمة المرور يجب أن تكون بالإنجليزية أو الأرقام/الرموز فقط وممنوع العربي';
@@ -100,10 +124,36 @@ class _SignupScreenState extends State<SignupScreen> {
                     'BADDAL',
                     style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: primaryGreen, letterSpacing: 1.5),
                   ),
-                  const SizedBox(height: 25),
+                  const SizedBox(height: 15),
                   const Text('إنشاء حساب جديد', style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: navyBlue)),
                   const SizedBox(height: 6),
                   Text('انضم إلى مجتمع بدل وابدأ رحلتك اليوم', style: TextStyle(color: textHighContrast, fontSize: 15, fontWeight: FontWeight.w500)),
+                  const SizedBox(height: 25),
+
+                  // 🎯 شريط تبويب احترافي وأنيق لاختيار نوع الحساب
+                  Container(
+                    height: 50,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      color: Colors.grey[200],
+                    ),
+                    child: TabBar(
+                      controller: _tabController,
+                      indicatorSize: TabBarIndicatorSize.tab,
+                      dividerColor: Colors.transparent,
+                      indicator: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        color: navyBlue,
+                      ),
+                      labelColor: Colors.white,
+                      unselectedLabelColor: navyBlue.withValues(alpha: 0.6),
+                      labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                      tabs: const [
+                        Tab(text: "مستخدم عادي"),
+                        Tab(text: "كابتن (طيار)"),
+                      ],
+                    ),
+                  ),
                   const SizedBox(height: 30),
 
                   // حقل الاسم الكامل
@@ -116,7 +166,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
                   const SizedBox(height: 18),
 
-                  // حقل البريد الإلكتروني (إجباري للـ OTP المجاني)
+                  // حقل البريد الإلكتروني (إجباري للـ OTP المجاني للطرفين)
                   _buildFieldLabel('البريد الإلكتروني (تفعيل الـ OTP)'),
                   TextFormField(
                     controller: _emailController,
@@ -127,8 +177,8 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
                   const SizedBox(height: 18),
 
-                  // حقل رقم الهاتف (اختياري وبدون تعقيد كود الدولة)
-                  _buildFieldLabel('رقم الهاتف المحمول (اختياري)'),
+                  // حقل رقم الهاتف (اختياري لليوزر / إجباري تماماً للكابتن)
+                  _buildFieldLabel(_currentRole == 'captain' ? 'رقم الهاتف المحمول (إجباري للعملاء)' : 'رقم الهاتف المحمول (اختياري)'),
                   TextFormField(
                     controller: _phoneController,
                     keyboardType: TextInputType.phone,
@@ -138,7 +188,11 @@ class _SignupScreenState extends State<SignupScreen> {
                     inputFormatters: [
                       FilteringTextInputFormatter.digitsOnly,
                     ],
-                    decoration: _buildInputDecoration(Icons.phone_android_rounded, '01xxxxxxxxx (يمكن تركه فارغاً)', navyBlue).copyWith(
+                    decoration: _buildInputDecoration(
+                      Icons.phone_android_rounded, 
+                      _currentRole == 'captain' ? 'أدخل رقم الاتصال والواتساب الأساسي' : '01xxxxxxxxx (يمكن تركه فارغاً)', 
+                      navyBlue
+                    ).copyWith(
                       counterText: "",
                     ),
                   ),
@@ -156,7 +210,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   
                   const SizedBox(height: 35),
                   
-                  // زر إنشاء الحساب المحدث لتمرير الداتا كاملة وبشكل ديناميكي لشاشة الـ OTP
+                  // زر إنشاء الحساب الذكي
                   SizedBox(
                     width: double.infinity,
                     height: 55,
@@ -165,7 +219,10 @@ class _SignupScreenState extends State<SignupScreen> {
                         if (_formKey.currentState!.validate()) {
                           FocusScope.of(context).unfocus();
                           
-                          // تمرير البيانات الحقيقية التي أدخلها المستخدم شاشة الـ OTP عبر الإيميل
+                          // 🌐 مكان ربط الـ API مستقبلاً:
+                          // نرسل للسيرفر: _nameController.text, _emailController.text, _phoneController.text, _passwordController.text, _currentRole
+
+                          // تمرير البيانات كاملة بما فيها الـ role لشاشة الـ OTP لتوجيه وحفظ سليم بالكاش
                           Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -173,6 +230,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                 phone: _phoneController.text.trim(),
                                 name: _nameController.text.trim(),
                                 email: _emailController.text.trim(),
+                                role: _currentRole,
                               ),
                             ),
                           );
@@ -183,7 +241,10 @@ class _SignupScreenState extends State<SignupScreen> {
                         elevation: 0,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
-                      child: const Text('إنشاء حساب', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                      child: Text(
+                        _currentRole == 'captain' ? 'تسجيل كابتن جديد' : 'إنشاء حساب مستخدم', 
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)
+                      ),
                     ),
                   ),
                   const SizedBox(height: 25),

@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // 🚨 تم التأكد من استيرادها لمسح الكاش
+import '../screens/login_screen.dart'; // غيري المسار ده لمسار ملف الـ LoginScreen عندك
+// import 'path_to_your_login_screen/login_screen.dart'; // 🚨 فك التهميش هنا وحط مسار شاشة اللوج إن الصحيح عندك
 
 class AdminPanelScreen extends StatefulWidget {
   const AdminPanelScreen({super.key});
@@ -187,9 +190,23 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
           backgroundColor: Colors.white,
           elevation: 0,
           scrolledUnderElevation: 0,
+          // 🚨 التعديل الرئيسي هنا: تحويل سهم الباك لزر تسجيل خروج آمن يمنع الشاشة البيضاء
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: navyBlue, size: 20),
-            onPressed: () => Navigator.pop(context),
+            icon: const Icon(Icons.logout_rounded, color: navyBlue, size: 22),
+            onPressed: () async {
+              final prefs = await SharedPreferences.getInstance();
+              // مسح بيانات جلسة الأدمن بالكامل من الـ الكاش المحلي
+              await prefs.clear(); 
+
+              if (context.mounted) {
+                // الانتقال المباشر لشاشة الـ Login وتنظيف الـ Stack بالكامل لمنع أي رجوع أو شاشة بيضاء
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginScreen()),
+                  (route) => false,
+                );
+              }
+            },
           ),
         ),
         body: Directionality(
@@ -218,7 +235,6 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                           child: _buildAdvancedStatCard(
                             title: "الرحلات الملغاة",
                             mainValue: "42 إلغاء",
-                            // تقسيم مرحلة التحضير والإلغاء
                             subDetail: "28 بالتجهيز • 14 أثناء السير", 
                             icon: Icons.cancel_rounded,
                             color: Colors.red.shade600,
@@ -249,7 +265,6 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                 child: const TabBar(
                   indicatorSize: TabBarIndicatorSize.tab,
                   dividerColor: Colors.transparent,
-                  // هنا تم تلوين التبويب النشط بلون الأبلكيشن الأساسي (الأخضر البروفيشنال)
                   indicator: BoxDecoration(
                     color: primaryGreen,
                     borderRadius: BorderRadius.all(Radius.circular(12)),
@@ -261,7 +276,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                     Tab(text: "بث إشعارات", icon: Icon(Icons.campaign_rounded, size: 18)),
                     Tab(text: "الكباتن", icon: Icon(Icons.sports_motorsports_rounded, size: 18)),
                     Tab(text: "المستخدمين", icon: Icon(Icons.people_alt_rounded, size: 18)),
-                    Tab(text: "البلاغات", icon: Icon(Icons.support_agent_rounded, size: 18)), // تبويب البلاغات الجديد
+                    Tab(text: "البلاغات", icon: Icon(Icons.support_agent_rounded, size: 18)),
                   ],
                 ),
               ),
@@ -481,7 +496,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                       ),
                     ),
 
-                    // 4. تبويب البلاغات والدعم الفني الجديد (المقروء من السابورت بالملي)
+                    // 4. تبويب البلاغات والدعم الفني الجديد
                     ListView.builder(
                       padding: const EdgeInsets.all(16.0),
                       itemCount: _supportTickets.length,
@@ -557,7 +572,6 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
     );
   }
 
-  // الكارت العادي للإحصائيات السريعة
   Widget _buildStatCard(String title, String value, IconData icon, Color mainColor, Color bgIconColor) {
     return Container(
       padding: const EdgeInsets.all(12),
@@ -588,7 +602,6 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
     );
   }
 
-  // كارت إحصائي متقدم يعرض التفاصيل الفرعية (مراحل الإلغاء بالملي)
   Widget _buildAdvancedStatCard({required String title, required String mainValue, required String subDetail, required IconData icon, required Color color, required Color bgColor}) {
     return Container(
       padding: const EdgeInsets.all(12),
@@ -606,16 +619,16 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(10)),
-                child: Icon(icon, color: color, size: 22),
+                child: Icon(icon, color: color, size: 20),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 10),
               Text(title, style: TextStyle(color: navyBlue.withOpacity(0.6), fontSize: 12, fontWeight: FontWeight.bold)),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           Text(mainValue, style: const TextStyle(color: navyBlue, fontSize: 18, fontWeight: FontWeight.w900)),
-          const SizedBox(height: 2),
-          Text(subDetail, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 4),
+          Text(subDetail, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.bold)),
         ],
       ),
     );
@@ -625,16 +638,12 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.01), blurRadius: 8)],
-      ),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.grey.shade100)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(fontWeight: FontWeight.w900, color: navyBlue, fontSize: 14)),
-          const Divider(thickness: 0.5, color: Color(0xFFE2E8F0), height: 16),
+          Text(title, style: const TextStyle(fontWeight: FontWeight.w900, color: navyBlue, fontSize: 15)),
+          const SizedBox(height: 16),
           child,
         ],
       ),
@@ -645,39 +654,41 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: backgroundColor, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey.shade100)),
+      decoration: BoxDecoration(color: backgroundColor, borderRadius: BorderRadius.circular(12)),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          CircleAvatar(backgroundColor: Colors.white, radius: 18, child: Icon(Icons.person_outline_rounded, color: navyBlue.withOpacity(0.7), size: 18)),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(name, style: const TextStyle(fontWeight: FontWeight.bold, color: navyBlue, fontSize: 13)),
-                Text("$username  •  $phone", style: TextStyle(color: navyBlue.withOpacity(0.5), fontSize: 11)),
-              ],
-            ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(name, style: const TextStyle(fontWeight: FontWeight.bold, color: navyBlue, fontSize: 14)),
+              const SizedBox(height: 2),
+              Text("$username • $phone", style: TextStyle(color: navyBlue.withOpacity(0.5), fontSize: 12, fontWeight: FontWeight.bold)),
+            ],
           ),
-          IconButton(icon: const Icon(Icons.delete_outline_rounded, color: Colors.red, size: 18), onPressed: () => _showDeleteConfirmation(context, name)),
+          IconButton(
+            icon: const Icon(Icons.delete_outline_rounded, color: Colors.red),
+            onPressed: () => _showDeleteConfirmation(context, name),
+          )
         ],
       ),
     );
   }
 
-  InputDecoration _inputDecoration(String hintText, {required IconData icon}) {
+  InputDecoration _inputDecoration(String hint, {required IconData icon}) {
     return InputDecoration(
-      hintText: hintText,
-      hintStyle: TextStyle(color: navyBlue.withOpacity(0.35), fontWeight: FontWeight.w500, fontSize: 13),
-      fillColor: const Color(0xFFF8FAFC),
-      filled: true,
-      errorStyle: const TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
+      hintText: hint,
+      hintStyle: TextStyle(color: navyBlue.withOpacity(0.3), fontSize: 13, fontWeight: FontWeight.bold),
       prefixIcon: Icon(icon, color: navyBlue.withOpacity(0.4), size: 20),
+      filled: true,
+      fillColor: backgroundColor,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade200, width: 1.5)),
-      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: navyBlue, width: 2)),
-      errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.red, width: 1.5)),
-      focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.red, width: 2)),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: primaryGreen.withOpacity(0.5), width: 1.5)),
+      errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.red, width: 1)),
+      focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.red, width: 1.5)),
+      errorStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
     );
   }
 }
